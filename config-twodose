@@ -1,0 +1,25 @@
+# setup for reactively vaccinating 70% of the population of Seattle with a vaccine that requires a boost on day 21
+label example-twodose
+datafile seattle
+logfile 1
+individualfile 1
+R0 1.5
+reactivestrategy mass
+vaccinationfraction 0.5
+seed 1
+preexistingimmunitylevel 0
+preexistingimmunitybyage 0 0 0 0 0
+prestrategy prevaccinate
+reactivestrategy mass
+vaccinationfraction 0.5
+seedinfected 10
+seedinfecteddaily 0
+vaccinedata 0 0.4 0.4 0.67 0 0 0 0 0 0 0
+vaccinebuildup 0 21 0 0 0.01 0.01 0.02 0.02 0.03 0.05 0.07 0.1 0.14 0.19 0.26 0.36 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.56 0.62 0.69 0.76 0.84 0.92 1.0
+isolation 1
+liberalleave 0
+quarantine 1
+responsedelay -1
+schoolclosuredays 3
+schoolclosurepolicy bytractandage
+preexistingimmunitylevel 0
