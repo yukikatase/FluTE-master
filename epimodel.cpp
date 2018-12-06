@@ -882,9 +882,6 @@ void EpiModel::read_workflow(void)
 void EpiModel::create_person(int nAgeGroup, int nFamilySize, int nFamily, int nHouseholdCluster, int nNeighborhood, int nSchoolgroup, Community& comm) {
   Person p;
   p.qe = 0;
-  p.hospital = 0;
-  p.HospitalizationTimer = 0;
-  p.dead = 0;
   p.id    = nNumPerson++;
   p.nHomeComm = p.nDayComm= comm.id; // assume home community = work community
   p.nDayTract = comm.nTractID;
@@ -1273,7 +1270,6 @@ void EpiModel::infect(Person& p) {
   p.iday=-1;  // set to -1 so the person is not infectious until tomorrow
   p.ibits = 0;
   double fSymptomaticProb=0.67;
-  double hospitalizationProb[5]={0.141, 0.0006, 0.001, 0.001, 0.0421};
   if (isVaccinated(p)) {
     if (needsBoost(p))
       fSymptomaticProb*=(1.0-VaccineData[whichVaccine(p)].VEp*defaultvacceff[p.vday]*fVaccineEfficacyByAge[p.age]);
@@ -1306,11 +1302,6 @@ void EpiModel::infect(Person& p) {
       setWithdrawDays(p,getIncubationDays(p)+2);
     else
       setWithdrawDays(p,0); // will not withdraw
-
-    double rn3 = get_rand_double;
-    if (rn3<hospitalizationProb[p.age]){
-      p.HospitalizationTimer = getIncubationDays(p) + 2 + hospitalization[isHighRisk(p)][p.age];
-    }
 
     if (bTrigger && (getWithdrawDays(p)==0 || // doesn't voluntarily withdraw
          getWithdrawDays(p)-getIncubationDays(p)>1)) { // would withdraw later
@@ -1840,13 +1831,6 @@ void EpiModel::night(void) {
 	      // call TAP when cases are ascertained in this tract
 	      if (getAVPolicy(tractvec[comm.nTractID-nFirstTract])!=NOAV)
 		TAP(p);
-
-        // 病院送り
-        if (p.iday==getIncubationDays(p)+2 && p.HospitalizationTimer > 0){
-          p.hospital = 1;
-          setWithdrawn(p);
-        }
-
 	      // quarantine the family
 	      if (isQuarantine(tractvec[comm.nTractID-nFirstTract]) && p.iday==getIncubationDays(p)+1) {
 		for (unsigned int pid2=comm.nFirstPerson;
@@ -1879,7 +1863,7 @@ void EpiModel::night(void) {
 	  }
 	}
 	p.iday++;
-	if (p.iday>=VLOADNDAY && !p.hospital) {
+	if (p.iday>=VLOADNDAY) {
 	  if (isSymptomatic(p))
 	    comm.nsym[p.age]--;
 	  p.status &= ~(SUSCEPTIBLE|INFECTED|SYMPTOMATIC|WITHDRAWN); // recovered
@@ -1889,18 +1873,6 @@ void EpiModel::night(void) {
     outputfile<<p.id<<" "<<nTimer/2<<" "<<isWithdrawn(p)<<endl;
     outputfile.close();
 	}
-
-  if (p.iday>=p.HospitalizationTimer && p.hospital) {
-    if (isSymptomatic(p))
-      comm.nsym[p.age]--;
-    p.status &= ~(SUSCEPTIBLE|INFECTED|SYMPTOMATIC|WITHDRAWN); // recovered
-    comm.ninf[p.age]--;
-    p.iday=0;
-    ofstream outputfile("RecoverdFromHospital.txt", ios::app);
-    outputfile<<p.id<<" "<<nTimer/2<<" "<<isWithdrawn(p)<<endl;
-    outputfile.close();
-  }
-
       }
       if (isVaccinated(p) && p.vday<VACCEFFLENGTH && 
 	  (isBoosted(p) ||

@@ -3,15 +3,14 @@ label example-twodose
 datafile seattle
 logfile 1
 individualfile 1
-R0 1.5
+R0 1.8
 reactivestrategy mass
-vaccinationfraction 0.5
 seed 1
 preexistingimmunitylevel 0
 preexistingimmunitybyage 0 0 0 0 0
-prestrategy prevaccinate
+prestrategy none
 reactivestrategy mass
-vaccinationfraction 0.5
+vaccinationfraction 0.7
 seedinfected 10
 seedinfecteddaily 0
 vaccinedata 0 0.4 0.4 0.67 0 0 0 0 0 0 0
@@ -22,4 +21,3 @@ quarantine 1
 responsedelay -1
 schoolclosuredays 3
 schoolclosurepolicy bytractandage
-preexistingimmunitylevel 0
