@@ -1467,14 +1467,12 @@ void EpiModel::TAP(Person& p) {
 // dayinfectsusceptibles - called by "day" for daytime transmission
 void EpiModel::dayinfectsusceptibles(const Person &infected, Community &comm) {
   const double *cpf = (isChild(infected)?cpfc:cpfa); // probability of family transmission
-  bool bInfectedAtHome = ((isWithdrawn(infected) ||
+  bool bInfectedAtHome = infected.hospital == 0 && (isWithdrawn(infected) ||
 			  isQuarantined(infected) ||
 			  infected.nWorkplace==0 ||
 			  (isChild(infected) && 
 			   infected.nWorkplace<9 &&
-			   isSchoolClosed(tractvec[infected.nDayTract-nFirstTract], infected.nWorkplace))) &&
-        infected.hospital == 0
-         );   // infected is at home during the day
+			   isSchoolClosed(tractvec[infected.nDayTract-nFirstTract], infected.nWorkplace)));   // infected is at home during the day
   bool bInfectedAtSchool = (isChild(infected) && 
 			    infected.nWorkplace>0 && 
 			    ((infected.age==0 && infected.nWorkplace>=9) ||
@@ -1767,7 +1765,7 @@ void EpiModel::nightinfectsusceptibles(const Person &infected, Community &comm) 
        pid2++) {
     Person &p2 = pvec[pid2];
     if (isSusceptible(p2) && p2.nTravelTimer<=0) { // && p.id!=p2.id) {
-      if (infected.family==p2.family)   // transmission within household
+      if (infected.family==p2.family && infected.hospital == 0)   // transmission within household
 	if (infect(p2,infected,cpf[p2.age],FROMFAMILYNIGHT))
 	  continue;
       if (!isWithdrawn(infected) && !isQuarantined(infected) && !isQuarantined(p2)) {
