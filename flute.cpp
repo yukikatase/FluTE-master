@@ -45,11 +45,11 @@ int main(int argc, char *argv[]) {
   outputfile1.close();
   ofstream outputfile2("Withdrawed.txt", ios::trunc);
   outputfile2.close();
-  ofstream outputfile3("Recoverd.txt", ios::trunc);
+  ofstream outputfile3("Recovered.txt", ios::trunc);
   outputfile3.close();
   ofstream outputfile4("clearQuarantined.txt", ios::trunc);
   outputfile4.close();
-  ofstream outputfile5("RecoverdFromHospital.txt", ios::trunc);
+  ofstream outputfile5("RecoveredFromHospital.txt", ios::trunc);
   outputfile5.close();
   ofstream outputfile6("Dead.txt", ios::trunc);
   outputfile6.close();

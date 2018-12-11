@@ -885,7 +885,7 @@ void EpiModel::create_person(int nAgeGroup, int nFamilySize, int nFamily, int nH
   p.hospital = 0;
   p.HospitalizationTimer = 0;
   p.dead = 0;
-  p.DeadTimer = 0;
+  p.willDead = 0;
   p.id    = nNumPerson++;
   p.nHomeComm = p.nDayComm= comm.id; // assume home community = work community
   p.nDayTract = comm.nTractID;
@@ -1309,21 +1309,21 @@ void EpiModel::infect(Person& p) {
     else
       setWithdrawDays(p,0); // will not withdraw
 
-    double rn3 = get_rand_double;
-    if (rn3<hospitalizationProb[p.age]){
+    rn2 = get_rand_double;
+    if (rn2<hospitalizationProb[p.age]){
       p.HospitalizationTimer = getIncubationDays(p) + 2 + hospitalization[isHighRisk(p)][p.age];
       setWillBeAscertained(p);
-      ofstream outputfile("RecoverdFromHospital.txt", ios::app);
-      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn3<<" "<<hospitalizationProb[p.age]<<endl;
+      ofstream outputfile("RecoveredFromHospital.txt", ios::app);
+      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn2<<" "<<p.HospitalizationTimer<<endl;
       outputfile.close();
     }
 
     //double rn4 = get_rand_double;
-    if (rn3<deadProb[p.age]){
-      p.DeadTimer = getIncubationDays(p) + 2;
+    if (rn2<deadProb[p.age]){
+      p.willDead = 1;
       setWillBeAscertained(p);
       ofstream outputfile("Dead.txt", ios::app);
-      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn3<<" "<<deadProb[p.age]<<endl;
+      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn2<<" "<<deadProb[p.age]<<endl;
       outputfile.close();
     }
 
@@ -1625,7 +1625,11 @@ void EpiModel::day(void) {
     }
     if (isSymptomatic(p))
       p.pri *= 2.0;  // symptomatic people are 2 times as infectious
-    assert(p.pri<=1.0);
+
+    if(p.hospital == 0){ //病院にいるときはこれを無視
+      assert(p.pri<=1.0);
+    }
+
     assert(p.prs<=1.0);
   }
 
@@ -1856,15 +1860,6 @@ void EpiModel::night(void) {
 	      if (getAVPolicy(tractvec[comm.nTractID-nFirstTract])!=NOAV)
 		TAP(p);
 
-        // 病院送り
-        if (p.iday==getIncubationDays(p)+2 && p.HospitalizationTimer > 0){
-          p.hospital = 1;
-          setWithdrawn(p);
-          ofstream outputfile("RecoverdFromHospital.txt", ios::app);
-          outputfile<<p.id<<" "<<nTimer/2<<endl;
-          outputfile.close();
-        }
-
 	      // quarantine the family
 	      if (isQuarantine(tractvec[comm.nTractID-nFirstTract]) && p.iday==getIncubationDays(p)+1) {
 		for (unsigned int pid2=comm.nFirstPerson;
@@ -1894,6 +1889,23 @@ void EpiModel::night(void) {
         outputfile<<p.id<<" "<<(int)getIncubationDays(p)<<" "<<(int)getWithdrawDays(p)<<" "<<nTimer/2 - (int)getWithdrawDays(p)<<" "<<(nTimer+1)/2 - (int)getWithdrawDays(p) + (int)getIncubationDays(p)<<"~"<<nTimer/2 - (int)getWithdrawDays(p) + 5<<endl;
         outputfile.close();
       }
+      // 病院送り
+      if (p.iday==getIncubationDays(p) + 2 && p.HospitalizationTimer > 0){
+        p.hospital = 1;
+        setWithdrawn(p);
+        ofstream outputfile("RecoveredFromHospital.txt", ios::app);
+        outputfile<<p.id<<" "<<nTimer/2<<" 入院したよ"<<endl;
+        outputfile.close();
+      }
+      // 死亡
+      if (p.willDead>0 && p.iday==(int)getWithdrawDays(p)){
+        p.dead = 1;
+        p.hospital = 1;
+        setWithdrawn(p);
+        ofstream outputfile("Dead.txt", ios::app);
+        outputfile<<p.id<<" "<<nTimer/2<<" 死亡しました"<<endl;
+        outputfile.close();
+      }
 	  }
 	}
 	p.iday++;
@@ -1903,7 +1915,7 @@ void EpiModel::night(void) {
 	  p.status &= ~(SUSCEPTIBLE|INFECTED|SYMPTOMATIC|WITHDRAWN); // recovered
 	  comm.ninf[p.age]--;
 	  p.iday=0;
-    ofstream outputfile("Recoverd.txt", ios::app);
+    ofstream outputfile("Recovered.txt", ios::app);
     outputfile<<p.id<<" "<<nTimer/2<<" "<<isWithdrawn(p)<<endl;
     outputfile.close();
 	}
@@ -1915,8 +1927,8 @@ void EpiModel::night(void) {
     p.status &= ~(SUSCEPTIBLE|INFECTED|SYMPTOMATIC|WITHDRAWN); // recovered
     comm.ninf[p.age]--;
     p.iday=0;
-    ofstream outputfile("RecoverdFromHospital.txt", ios::app);
-    outputfile<<p.id<<" "<<nTimer/2<<endl;
+    ofstream outputfile("RecoveredFromHospital.txt", ios::app);
+    outputfile<<p.id<<" "<<nTimer/2<<" 退院したよ"<<endl;
     outputfile.close();
   }
 

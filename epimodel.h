@@ -165,9 +165,9 @@ struct vaccinedatastruct {
 struct Person {
   int qe; // I found quarantine error. this keeping nTimer
   int hospital;
-  int HospitalizationTimer; // hospitalization timer
+  int HospitalizationTimer; // いつまで病院にいるか
   int dead;
-  int DeadTimer;
+  int willDead;
   unsigned int id;	// agent id
   unsigned char age;	// age group
   unsigned char status;	// infection status
