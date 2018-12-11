@@ -1927,6 +1927,7 @@ void EpiModel::night(void) {
     p.status &= ~(SUSCEPTIBLE|INFECTED|SYMPTOMATIC|WITHDRAWN); // recovered
     comm.ninf[p.age]--;
     p.iday=0;
+    p.hospital = 0;
     ofstream outputfile("RecoveredFromHospital.txt", ios::app);
     outputfile<<p.id<<" "<<nTimer/2<<" 退院したよ"<<endl;
     outputfile.close();
