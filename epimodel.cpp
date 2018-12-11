@@ -1318,7 +1318,7 @@ void EpiModel::infect(Person& p) {
       outputfile.close();
     }
 
-    //double rn4 = get_rand_double;
+    rn2 = get_rand_double;
     if (rn2<deadProb[p.age]){
       p.willDead = 1;
       setWillBeAscertained(p);
