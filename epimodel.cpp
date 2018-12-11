@@ -1921,7 +1921,7 @@ void EpiModel::night(void) {
 	}
       }
 
-  if (p.iday>=p.HospitalizationTimer && p.hospital == 1) {
+  if (p.iday>=p.HospitalizationTimer && p.hospital == 1 && p.dead == 0) {
     if (isSymptomatic(p))
       comm.nsym[p.age]--;
     p.status &= ~(SUSCEPTIBLE|INFECTED|SYMPTOMATIC|WITHDRAWN); // recovered
