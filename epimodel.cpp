@@ -1307,11 +1307,11 @@ void EpiModel::infect(Person& p) {
     else
       setWithdrawDays(p,0); // will not withdraw
 
-    //double rn3 = get_rand_double;
-    if (rn2<hospitalizationProb[p.age]){
+    double rn3 = get_rand_double;
+    if (rn3<hospitalizationProb[p.age]){
       p.HospitalizationTimer = getIncubationDays(p) + 2 + hospitalization[isHighRisk(p)][p.age];
       ofstream outputfile("RecoverdFromHospital.txt", ios::app);
-      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn2<<" "<<hospitalizationProb[p.age]<<endl;
+      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn3<<" "<<hospitalizationProb[p.age]<<endl;
       outputfile.close();
     }
 
@@ -1907,7 +1907,7 @@ void EpiModel::night(void) {
     outputfile<<p.id<<" "<<nTimer/2<<endl;
     outputfile.close();
   }
-      
+
       if (isVaccinated(p) && p.vday<VACCEFFLENGTH && 
 	  (isBoosted(p) ||
 	   p.vday<VaccineData[whichVaccine(p)].nBoostDay ||

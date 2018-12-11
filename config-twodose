@@ -5,7 +5,7 @@ logfile 1
 individualfile 1
 R0 1.8
 reactivestrategy mass
-seed 1
+seed 88
 preexistingimmunitylevel 0
 preexistingimmunitybyage 0 0 0 0 0
 prestrategy none
