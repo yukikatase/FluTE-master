@@ -885,6 +885,7 @@ void EpiModel::create_person(int nAgeGroup, int nFamilySize, int nFamily, int nH
   p.hospital = 0;
   p.HospitalizationTimer = 0;
   p.dead = 0;
+  p.DeadTimer = 0;
   p.id    = nNumPerson++;
   p.nHomeComm = p.nDayComm= comm.id; // assume home community = work community
   p.nDayTract = comm.nTractID;
@@ -1273,7 +1274,8 @@ void EpiModel::infect(Person& p) {
   p.iday=-1;  // set to -1 so the person is not infectious until tomorrow
   p.ibits = 0;
   double fSymptomaticProb=0.67;
-  double hospitalizationProb[5]={0.0141, 0.0006, 0.001, 0.001, 0.0421};
+  double hospitalizationProb[5]={0.0141, 0.0006, 0.002, 0.015, 0.0421};
+  double deadProb[5]={0.00004, 0.00001, 0.00005, 0.001, 0.01170};
   if (isVaccinated(p)) {
     if (needsBoost(p))
       fSymptomaticProb*=(1.0-VaccineData[whichVaccine(p)].VEp*defaultvacceff[p.vday]*fVaccineEfficacyByAge[p.age]);
@@ -1310,8 +1312,18 @@ void EpiModel::infect(Person& p) {
     double rn3 = get_rand_double;
     if (rn3<hospitalizationProb[p.age]){
       p.HospitalizationTimer = getIncubationDays(p) + 2 + hospitalization[isHighRisk(p)][p.age];
+      setWillBeAscertained(p);
       ofstream outputfile("RecoverdFromHospital.txt", ios::app);
       outputfile<<p.id<<" "<<nTimer/2<<" "<<rn3<<" "<<hospitalizationProb[p.age]<<endl;
+      outputfile.close();
+    }
+
+    //double rn4 = get_rand_double;
+    if (rn3<deadProb[p.age]){
+      p.DeadTimer = getIncubationDays(p) + 2;
+      setWillBeAscertained(p);
+      ofstream outputfile("Dead.txt", ios::app);
+      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn3<<" "<<deadProb[p.age]<<endl;
       outputfile.close();
     }
 

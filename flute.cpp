@@ -51,6 +51,8 @@ int main(int argc, char *argv[]) {
   outputfile4.close();
   ofstream outputfile5("RecoverdFromHospital.txt", ios::trunc);
   outputfile5.close();
+  ofstream outputfile6("Dead.txt", ios::trunc);
+  outputfile6.close();
   EpiModelParameters parms(configname);
   EpiModel model(parms);
   model.run();

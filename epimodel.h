@@ -167,6 +167,7 @@ struct Person {
   int hospital;
   int HospitalizationTimer; // hospitalization timer
   int dead;
+  int DeadTimer;
   unsigned int id;	// agent id
   unsigned char age;	// age group
   unsigned char status;	// infection status
