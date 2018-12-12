@@ -1311,10 +1311,10 @@ void EpiModel::infect(Person& p) {
 
     rn2 = get_rand_double;
     if (rn2<hospitalizationProb[p.age]){
-      p.HospitalizationTimer = getIncubationDays(p) + 2 + hospitalization[isHighRisk(p)][p.age];
+      p.HospitalizationTimer = getIncubationDays(p) + hospitalization[isHighRisk(p)][p.age];
       setWillBeAscertained(p);
       ofstream outputfile("RecoveredFromHospital.txt", ios::app);
-      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn2<<" "<<p.HospitalizationTimer<<endl;
+      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn2<<" "<<p.HospitalizationTimer<<" "<<hospitalization[isHighRisk(p)][p.age]<<endl;
       outputfile.close();
     }
 
@@ -1883,27 +1883,28 @@ void EpiModel::night(void) {
 		}
 	      }
 	    }
-	    if (getWithdrawDays(p)>0 && p.iday==(int)getWithdrawDays(p)){
-	      setWithdrawn(p);              // withdraw to home
-        ofstream outputfile("Withdrawed.txt", ios::app);
-        outputfile<<p.id<<" "<<(int)getIncubationDays(p)<<" "<<(int)getWithdrawDays(p)<<" "<<nTimer/2 - (int)getWithdrawDays(p)<<" "<<(nTimer+1)/2 - (int)getWithdrawDays(p) + (int)getIncubationDays(p)<<"~"<<nTimer/2 - (int)getWithdrawDays(p) + 5<<endl;
+      // 死亡
+      if (p.willDead>0 && p.iday==(int)getIncubationDays(p)){
+        p.dead = 1;
+        p.hospital = 1;
+        setWithdrawn(p);
+        ofstream outputfile("Dead.txt", ios::app);
+        outputfile<<p.id<<" "<<nTimer/2<<" 死亡しました"<<endl;
         outputfile.close();
       }
       // 病院送り
-      if (p.iday==getIncubationDays(p) + 2 && p.HospitalizationTimer > 0){
+      if (p.iday==(int)getIncubationDays(p) && p.HospitalizationTimer > 0){
         p.hospital = 1;
         setWithdrawn(p);
         ofstream outputfile("RecoveredFromHospital.txt", ios::app);
         outputfile<<p.id<<" "<<nTimer/2<<" 入院したよ"<<endl;
         outputfile.close();
       }
-      // 死亡
-      if (p.willDead>0 && p.iday==(int)getWithdrawDays(p)){
-        p.dead = 1;
-        p.hospital = 1;
-        setWithdrawn(p);
-        ofstream outputfile("Dead.txt", ios::app);
-        outputfile<<p.id<<" "<<nTimer/2<<" 死亡しました"<<endl;
+
+	    if (getWithdrawDays(p)>0 && p.iday==(int)getWithdrawDays(p) && p.hospital == 0){
+	      setWithdrawn(p);              // withdraw to home
+        ofstream outputfile("Withdrawed.txt", ios::app);
+        outputfile<<p.id<<" "<<(int)getIncubationDays(p)<<" "<<(int)getWithdrawDays(p)<<" "<<nTimer/2 - (int)getWithdrawDays(p)<<" "<<(nTimer+1)/2 - (int)getWithdrawDays(p) + (int)getIncubationDays(p)<<"~"<<nTimer/2 - (int)getWithdrawDays(p) + 5<<endl;
         outputfile.close();
       }
 	  }
@@ -1921,7 +1922,7 @@ void EpiModel::night(void) {
 	}
       }
 
-  if (p.iday>=p.HospitalizationTimer && p.hospital == 1 && p.dead == 0) {
+  if (p.iday>p.HospitalizationTimer && p.hospital == 1 && p.dead == 0) {
     if (isSymptomatic(p))
       comm.nsym[p.age]--;
     p.status &= ~(SUSCEPTIBLE|INFECTED|SYMPTOMATIC|WITHDRAWN); // recovered
