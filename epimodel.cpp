@@ -479,8 +479,10 @@ void EpiModel::read_tracts(void) {
     t.nFirstCommunity = nNumCommunities;
     t.nNumResidents=0;
     t.nSchoolClosureTimer=0;
-    for (int i=0; i<9; i++)
+    for (int i=0; i<9; i++){
+      t.SchoolClosureTimer[i] = 0;
       t.bSchoolClosed[i] = false;
+    }
     int ncom = int(t.censuspopulation/(double)(Community::TARGETCOMMUNITYSIZE)+0.5);
     // small tracts are set to have no residents
     if (t.censuspopulation<500)
@@ -2497,6 +2499,7 @@ void EpiModel::response(void) {
 	     it++) {
 	  Tract &t = *it;
 	  int nNumAscertained=0; // number of children ascertained in this tract
+    int nNumAscertainedChild[9] = {0,0,0,0,0,0,0,0,0};
 	  for (unsigned int i=t.nFirstCommunity; i<t.nLastCommunity; i++)
 	    nNumAscertained += commvec[i].nEverAscertained[0]+commvec[i].nEverAscertained[1];
 	  if (nNumAscertained>0 && 
@@ -2510,10 +2513,15 @@ void EpiModel::response(void) {
 		   pid++) {
 		if (isChild(pvec[pid]) && pvec[pid].nWorkplace>0 && pvec[pid].nWorkplace<9 && isAscertained(pvec[pid]) && !isSchoolClosed(t,pvec[pid].nWorkplace)) {
 		  setSchoolClosed(t,pvec[pid].nWorkplace);
+      t.nSchoolClosureTimer = nSchoolClosureDays;
+      nNumAscertainedChild[pvec[pid].nWorkplace]++;
 		  cout << "Closing school " << pvec[pid].nWorkplace << " in tract " << t.id << " on day " << (nTimer/2) << endl;
 		}
 	      }
 	    }
+      ofstream outputfile("School.txt", ios::app);
+      outputfile<<t.id<<" day"<<(nTimer/2)<<" "<<nNumAscertainedChild[1]<<" "<<nNumAscertainedChild[2]<<" "<<nNumAscertainedChild[3]<<" "<<nNumAscertainedChild[4]<<" "<<nNumAscertainedChild[5]<<" "<<nNumAscertainedChild[6]<<" "<<nNumAscertainedChild[7]<<" "<<nNumAscertainedChild[8]<<endl;
+      outputfile.close();
 	  }
 	}
       }
@@ -2525,7 +2533,7 @@ void EpiModel::response(void) {
 	if (isSchoolClosed(t,1) &&                       // school is closed
 	    --t.nSchoolClosureTimer<=0 &&                // school closure is not in effect anymore
 	    nSchoolOpeningDays[t.fips_state-1]-1<=nTimer/2) { // school should be open
-	  cout << "School open on day " << nTimer/2 << ", time " << nTimer << endl;
+	  cout << "School open on day " << nTimer/2 << ", time " << nTimer <<", tract "<< t.id << endl;
 	  for (int i=0; i<9; i++)
 	    setSchoolOpen(t,i);// school is open again
 	}

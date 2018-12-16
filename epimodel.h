@@ -371,6 +371,7 @@ struct Tract {
   unsigned int nLastCommunity;   // ID of the last community (+1) in this tract
   int nNumResidents;        // number of residents (population size)
   int nSchoolClosureTimer;
+  int SchoolClosureTimer[9];
   
   friend istream& operator>>(istream& is, Tract& t) {
     char p; // because it is a comma separated file

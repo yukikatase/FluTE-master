@@ -53,6 +53,8 @@ int main(int argc, char *argv[]) {
   outputfile7.close();
   ofstream outputfile8("Dead.txt", ios::trunc);
   outputfile8.close();
+  ofstream outputfile9("School.txt", ios::trunc);
+  outputfile9.close();
   EpiModelParameters parms(configname);
   EpiModel model(parms);
   model.run();
