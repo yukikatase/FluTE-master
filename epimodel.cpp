@@ -165,6 +165,8 @@ EpiModel::EpiModel(EpiModelParameters &params) {
   // NPIs
   nSchoolClosurePolicy=params.getSchoolClosurePolicy();
   nSchoolClosureDays=params.getSchoolClosureDays();
+  nSchoolClosureStudents=params.getSchoolClosureStudents();
+  nQuarantineDays=params.getQuarantineDays();
   fIsolationCompliance=params.getIsolationCompliance();
   fQuarantineCompliance=params.getQuarantineCompliance();
   fLiberalLeaveCompliance=params.getLiberalLeaveCompliance();
@@ -1312,21 +1314,21 @@ void EpiModel::infect(Person& p) {
       setWithdrawDays(p,0); // will not withdraw
 
     rn2 = get_rand_double;
-    if (rn2<hospitalizationProb[p.age]){
-      p.HospitalizationTimer = getIncubationDays(p) + hospitalization[isHighRisk(p)][p.age];
-      setWillBeAscertained(p);
-      ofstream outputfile("RecoveredFromHospital.txt", ios::app);
-      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn2<<" "<<p.HospitalizationTimer<<" "<<hospitalization[isHighRisk(p)][p.age]<<endl;
-      outputfile.close();
-    }
-
-    rn2 = get_rand_double;
     if (rn2<deadProb[p.age]){
       p.willDead = 1;
       setWillBeAscertained(p);
-      ofstream outputfile("Dead.txt", ios::app);
-      outputfile<<p.id<<" "<<nTimer/2<<" "<<rn2<<" "<<deadProb[p.age]<<endl;
-      outputfile.close();
+      // ofstream outputfile("Dead.txt", ios::app);
+      // outputfile<<(int)p.id<<" "<<nTimer/2 + (int)getIncubationDays(p)<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
+      // outputfile.close();
+    }
+
+    rn2 = get_rand_double;
+    if (rn2<hospitalizationProb[p.age] && p.willDead == 0){
+      p.HospitalizationTimer = getIncubationDays(p) + hospitalization[isHighRisk(p)][p.age];
+      setWillBeAscertained(p);
+      // ofstream outputfile("RecoveredFromHospital.txt", ios::app);
+      // outputfile<<(int)p.id<<" "<<nTimer/2 + (int)getIncubationDays(p)<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<" "<<hospitalization[isHighRisk(p)][p.age]<<endl;
+      // outputfile.close();
     }
 
     if (bTrigger && (getWithdrawDays(p)==0 || // doesn't voluntarily withdraw
@@ -1870,12 +1872,10 @@ void EpiModel::night(void) {
 		  Person &p2 = pvec[pid2];
 		  if (p.family==p2.family && p.id!=p2.id && get_rand_double<fQuarantineCompliance) { // quarantine family member
 		    setQuarantined(p2);  // household quarantine
-        Person &pp = pvec[250758];
-        Person &pp2 = pvec[250756];
-		    p2.nQuarantineTimer = nQuarantineLength+1;
+		    p2.nQuarantineTimer = nQuarantineDays+1;
         p2.qe = nTimer;
         ofstream outputfile("Quarantined.txt", ios::app);
-        outputfile<<p2.id<<" "<<" "<<p2.qe<<" "<<nTimer<<" "<<(int)pp.nQuarantineTimer<<" "<<(int)pp2.nQuarantineTimer<<endl;
+        outputfile<<p2.id<<" "<<isWithdrawn(p)<<" "<<nTimer/2<<" "<<nQuarantineDays<<endl;
         outputfile.close();
 #ifdef PARALLEL
 		    if (p2.nWorkRank!=rank)
@@ -1891,22 +1891,22 @@ void EpiModel::night(void) {
         p.hospital = 1;
         setWithdrawn(p);
         ofstream outputfile("Dead.txt", ios::app);
-        outputfile<<p.id<<" "<<nTimer/2<<" 死亡しました"<<endl;
+        outputfile<<(int)p.id<<" "<<isQuarantined(p)<<" "<<nTimer/2<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
         outputfile.close();
       }
       // 病院送り
-      if (p.iday==(int)getIncubationDays(p) && p.HospitalizationTimer > 0){
+      if (p.iday==(int)getIncubationDays(p) && p.HospitalizationTimer > 0 && p.dead == 0){
         p.hospital = 1;
         setWithdrawn(p);
         ofstream outputfile("RecoveredFromHospital.txt", ios::app);
-        outputfile<<p.id<<" "<<nTimer/2<<" 入院したよ"<<endl;
+        outputfile<<(int)p.id<<" "<<isQuarantined(p)<<" "<<nTimer/2<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
         outputfile.close();
       }
 
 	    if (getWithdrawDays(p)>0 && p.iday==(int)getWithdrawDays(p) && p.hospital == 0){
 	      setWithdrawn(p);              // withdraw to home
         ofstream outputfile("Withdrawed.txt", ios::app);
-        outputfile<<p.id<<" "<<(int)getIncubationDays(p)<<" "<<(int)getWithdrawDays(p)<<" "<<nTimer/2 - (int)getWithdrawDays(p)<<" "<<(nTimer+1)/2 - (int)getWithdrawDays(p) + (int)getIncubationDays(p)<<"~"<<nTimer/2 - (int)getWithdrawDays(p) + 5<<endl;
+        outputfile<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
         outputfile.close();
       }
 	  }
@@ -1919,7 +1919,7 @@ void EpiModel::night(void) {
 	  comm.ninf[p.age]--;
 	  p.iday=0;
     ofstream outputfile("Recovered.txt", ios::app);
-    outputfile<<p.id<<" "<<nTimer/2<<" "<<isWithdrawn(p)<<endl;
+    outputfile<<(int)p.id<<" "<<isWithdrawn(p)<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<" "<<VLOADNDAY - (int)getWithdrawDays(p)<<" "<<nTimer/2<<endl;
     outputfile.close();
 	}
       }
@@ -1931,9 +1931,9 @@ void EpiModel::night(void) {
     comm.ninf[p.age]--;
     p.iday=0;
     p.hospital = 0;
-    ofstream outputfile("RecoveredFromHospital.txt", ios::app);
-    outputfile<<p.id<<" "<<nTimer/2<<" 退院したよ"<<endl;
-    outputfile.close();
+    // ofstream outputfile("RecoveredFromHospital.txt", ios::app);
+    // outputfile<<p.id<<" "<<nTimer/2<<" 退院したよ"<<endl;
+    // outputfile.close();
   }
 
       if (isVaccinated(p) && p.vday<VACCEFFLENGTH && 
@@ -2512,16 +2512,18 @@ void EpiModel::response(void) {
 		   pid<commvec[t.nLastCommunity-1].nLastPerson;
 		   pid++) {
 		if (isChild(pvec[pid]) && pvec[pid].nWorkplace>0 && pvec[pid].nWorkplace<9 && isAscertained(pvec[pid]) && !isSchoolClosed(t,pvec[pid].nWorkplace)) {
-		  setSchoolClosed(t,pvec[pid].nWorkplace);
-      t.nSchoolClosureTimer = nSchoolClosureDays;
-      nNumAscertainedChild[pvec[pid].nWorkplace]++;
-		  cout << "Closing school " << pvec[pid].nWorkplace << " in tract " << t.id << " on day " << (nTimer/2) << endl;
+		  if (++nNumAscertainedChild[pvec[pid].nWorkplace]>=nSchoolClosureStudents){
+        setSchoolClosed(t,pvec[pid].nWorkplace);
+        t.nSchoolClosureTimer = nSchoolClosureDays;
+        t.SchoolClosureTimer[pvec[pid].nWorkplace] = nSchoolClosureDays;
+        cout << "Closing school " << pvec[pid].nWorkplace << " in tract " << t.id << " on day " << (nTimer/2) << endl;
+        ofstream outputfile("School.txt", ios::app);
+        outputfile<<nSchoolClosureStudents<<" "<<t.id<<" day"<<(nTimer/2)<<" "<<nNumAscertainedChild[1]<<" "<<nNumAscertainedChild[2]<<" "<<nNumAscertainedChild[3]<<" "<<nNumAscertainedChild[4]<<" "<<nNumAscertainedChild[5]<<" "<<nNumAscertainedChild[6]<<" "<<nNumAscertainedChild[7]<<" "<<nNumAscertainedChild[8]<<endl;
+        outputfile.close();
+      }
 		}
 	      }
 	    }
-      ofstream outputfile("School.txt", ios::app);
-      outputfile<<t.id<<" day"<<(nTimer/2)<<" "<<nNumAscertainedChild[1]<<" "<<nNumAscertainedChild[2]<<" "<<nNumAscertainedChild[3]<<" "<<nNumAscertainedChild[4]<<" "<<nNumAscertainedChild[5]<<" "<<nNumAscertainedChild[6]<<" "<<nNumAscertainedChild[7]<<" "<<nNumAscertainedChild[8]<<endl;
-      outputfile.close();
 	  }
 	}
       }
@@ -2530,13 +2532,14 @@ void EpiModel::response(void) {
 	   it != tractvec.end();
 	   it++) {
 	Tract &t = *it;
-	if (isSchoolClosed(t,1) &&                       // school is closed
-	    --t.nSchoolClosureTimer<=0 &&                // school closure is not in effect anymore
-	    nSchoolOpeningDays[t.fips_state-1]-1<=nTimer/2) { // school should be open
-	  cout << "School open on day " << nTimer/2 << ", time " << nTimer <<", tract "<< t.id << endl;
-	  for (int i=0; i<9; i++)
-	    setSchoolOpen(t,i);// school is open again
-	}
+  for (int i=1; i<9; i++){
+  	if (isSchoolClosed(t,i) &&                       // school is closed
+  	    --t.SchoolClosureTimer[i]<=0 &&                // school closure is not in effect anymore
+  	    nSchoolOpeningDays[t.fips_state-1]-1<=nTimer/2) { // school should be open
+  	  cout << "School open on day " << nTimer/2 + 1 << ", time " << nTimer <<", tract "<< t.id <<", school number "<< i <<endl;
+  	 setSchoolOpen(t,i);// school is open again
+  	}
+  }
       }
     }
   }

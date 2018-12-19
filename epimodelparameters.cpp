@@ -281,6 +281,10 @@ bool EpiModelParameters::readConfigFile(const char *configname) {
 	  // do nothing - this line is a comment
 	} else if (param.compare("label")==0) {
 	  iss>>szLabel;
+	} else if (param.compare("schoolclosurestudents")==0) {
+	  iss>>nSchoolClosureStudents;
+	} else if (param.compare("quarantinedays")==0) {
+	  iss>>nQuarantineDays;
 	} else if (param.compare("datafile")==0) {
 	  iss>>szBaseName;
 	} else if (param.compare("summaryfilename")==0) {

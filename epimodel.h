@@ -549,6 +549,8 @@ class EpiModel {
   // non-pharmaceutical intervention parameters
   int nSchoolClosurePolicy;         // 1 for county-wide, 2 for ascertained
   int nSchoolClosureDays;           // number of days to close schools (0 for no school closure)
+  int nSchoolClosureStudents;
+  int nQuarantineDays;
   double fIsolationCompliance;      // probability of voluntary home isolation compliance (set to 0 for no isolation)?
   double fQuarantineCompliance;     // probability of individual compliance (set to 0 for no quarantine)
   double fLiberalLeaveCompliance;   // probability of individual compliance (set to 0 for no liberal leave)

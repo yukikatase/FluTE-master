@@ -72,6 +72,8 @@ class EpiModelParameters {
   // NPI parameters
   int getSchoolClosurePolicy() { return schoolClosurePolicy; }
   int getSchoolClosureDays() { return nSchoolClosureDays; }
+  int getSchoolClosureStudents() { return nSchoolClosureStudents; }
+  int getQuarantineDays() { return nQuarantineDays; }
   double getIsolationCompliance() { return fIsolationCompliance; }
   double getQuarantineCompliance() { return fQuarantineCompliance; }
   double getLiberalLeaveCompliance() { return fLiberalLeaveCompliance; }
@@ -164,6 +166,8 @@ class EpiModelParameters {
   // non-pharmaceutical intervention parameters
   int schoolClosurePolicy;          // 
   int nSchoolClosureDays;           // number of days to close schools (0 for no school closure)
+  int nSchoolClosureStudents;
+  int nQuarantineDays;
   double fIsolationCompliance;      // probability of voluntary home isolation compliance (set to 0 for no isolation)?
   double fQuarantineCompliance;     // probability of individual compliance (set to 0 for no quarantine)
   double fLiberalLeaveCompliance;   // probability of individual compliance (set to 0 for no liberal leave)
