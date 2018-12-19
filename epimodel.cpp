@@ -1870,7 +1870,7 @@ void EpiModel::night(void) {
 		     pid2<comm.nLastPerson;
 		     pid2++) {
 		  Person &p2 = pvec[pid2];
-		  if (p.family==p2.family && p.id!=p2.id && get_rand_double<fQuarantineCompliance) { // quarantine family member
+		  if (p.family==p2.family && p.id!=p2.id && get_rand_double<fQuarantineCompliance && p2.hospital == 0) { // quarantine family member
 		    setQuarantined(p2);  // household quarantine
 		    p2.nQuarantineTimer = nQuarantineDays+1;
         p2.qe = nTimer;
@@ -1899,7 +1899,7 @@ void EpiModel::night(void) {
         p.hospital = 1;
         setWithdrawn(p);
         ofstream outputfile("RecoveredFromHospital.txt", ios::app);
-        outputfile<<(int)p.id<<" "<<isQuarantined(p)<<" "<<nTimer/2<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
+        outputfile<<(int)p.id<<" "<<isQuarantined(p)<<" "<<nTimer/2<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<" "<<hospitalization[isHighRisk(p)][p.age]<<endl;
         outputfile.close();
       }
 
@@ -1919,7 +1919,7 @@ void EpiModel::night(void) {
 	  comm.ninf[p.age]--;
 	  p.iday=0;
     ofstream outputfile("Recovered.txt", ios::app);
-    outputfile<<(int)p.id<<" "<<isWithdrawn(p)<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<" "<<VLOADNDAY - (int)getWithdrawDays(p)<<" "<<nTimer/2<<endl;
+    outputfile<<(int)p.id<<" "<<isWithdrawn(p)<<" "<<VLOADNDAY - (int)getWithdrawDays(p)<<" "<<nTimer/2<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
     outputfile.close();
 	}
       }
@@ -3670,6 +3670,106 @@ void EpiModel::prerun(void) {
     seedinfected();
 }
 
+vector<string> tovector(stringstream inputfile1, string line1){
+  vector<string> s1;
+  vector<string> s2;
+  while(getline(inputfile1, line1)){
+    stringstream ss;
+    ss << line1;
+
+    while(getline(ss, line2, ' ')){
+      s1.push_back(line2);
+    }
+
+    s2.insert(s2.end(), s1.begin(), s1.end());
+    s1.clear();
+  }
+  return s2;
+}
+
+vector<vector<string> > queue(int i, vector<string> s2, vector<string> s3){
+  vector<vector<string> > a;
+  for (int j = i+1; j < s2.size()/4; ++j){
+    if(s2[0+i*4]==s2[0+j*4] && stoi(s2[2+i*4])+stoi(s2[3+i*4]) > stoi(s2[2+j*4])){
+      s2[3+i*4] = to_string(stoi(s2[2+j*4]) + stoi(s2[3+j*4]) - stoi(s2[2+i*4]));
+
+      s2.erase(s2.begin() + j*4);
+      s2.erase(s2.begin() + j*4);
+      s2.erase(s2.begin() + j*4);
+      s2.erase(s2.begin() + j*4);
+      a = queue(i, s2, s3);
+      break;
+    }else if(stoi(s2[2+i*4])+stoi(s2[3+i*4]) < stoi(s2[2+j*4])){
+      break;
+    }
+  }
+  if(a.empty()){
+    s3.push_back(s2[0+i*4]);
+    s3.push_back(s2[1+i*4]);
+    s3.push_back(s2[2+i*4]);
+    s3.push_back(s2[3+i*4]);
+    a.push_back(s2);
+    a.push_back(s3);
+  }
+  return a;
+}
+
+
+void qua(){
+  ifstream inputfile1("Quarantined.txt");
+  string line1 = "";
+  string line2 = "";
+  vector<string> s1;
+  vector<string> s2;
+  vector<string> s3;
+  while(getline(inputfile1, line1)){
+    stringstream ss;
+    ss << line1;
+
+    while(getline(ss, line2, ' ')){
+      s1.push_back(line2);
+    }
+
+    s2.insert(s2.end(), s1.begin(), s1.end());
+    s1.clear();
+  }
+  ofstream outputfile("Quarantined2.text", ios::trunc);
+  vector<vector<string> > a;
+
+  for (int i = 0; i < s2.size()/4; ++i){
+    a = queue(i, s2, s3);
+    s2 = a[0];
+    s3 = a[1];
+  }
+
+  for (int i = 0; i < s3.size()/4; ++i){
+    outputfile<<s3[0+i*4]<<" "<<s3[1+i*4]<<" "<<s3[2+i*4]<<" "<<s3[3+i*4]<<endl;
+  }
+  inputfile1.close();
+  outputfile.close();
+}
+
+void with(){
+  ifstream inputfile1("Quarantined2.txt");
+  ifstream inputfile2("Recovered.txt");
+  string line1 = "";
+  string line2 = "";
+  vector<string> s1;
+  vector<string> s2;
+  vector<string> s3;
+  while(getline(inputfile1, line1)){
+    stringstream ss;
+    ss << line1;
+
+    while(getline(ss, line2, ' ')){
+      s1.push_back(line2);
+    }
+
+    s2.insert(s2.end(), s1.begin(), s1.end());
+    s1.clear();
+  }
+}
+
 /* 
  * run - runs the simulation for the desired number of days
  *   nTimer: initialized to 0 in the constructor
@@ -3734,4 +3834,6 @@ void EpiModel::run(void) {
     (*logfile).close();
   summary();
   outputIndividuals();
+  qua();
+  withdraw();
 }
