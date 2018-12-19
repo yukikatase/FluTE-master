@@ -1906,7 +1906,7 @@ void EpiModel::night(void) {
 	    if (getWithdrawDays(p)>0 && p.iday==(int)getWithdrawDays(p) && p.hospital == 0){
 	      setWithdrawn(p);              // withdraw to home
         ofstream outputfile("Withdrawed.txt", ios::app);
-        outputfile<<(int)p.id<<" "<<nTimer<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
+        outputfile<<(int)p.id<<" "<<nTimer/2<<" "<<(int)getWithdrawDays(p)<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
         outputfile.close();
       }
 	  }
@@ -3715,8 +3715,8 @@ vector<vector<string> > queue(int i, vector<string> s2, vector<string> s3){
 }
 
 
-void qua(){
-  ifstream inputfile1("Quarantined.txt");
+void qua(string infile, string outfile){
+  ifstream inputfile1(infile);
   vector<string> s2;
   vector<string> s3;
   string line;
@@ -3725,7 +3725,7 @@ void qua(){
     s1 = tovector(line);
     s2.insert(s2.end(), s1.begin(), s1.end());
   }
-  ofstream outputfile("Quarantined2.text", ios::trunc);
+  ofstream outputfile(outfile, ios::trunc);
   vector<vector<string> > a;
 
   for (int i = 0; i < s2.size()/4; ++i){
@@ -3744,24 +3744,48 @@ void qua(){
 void withdraw(){
   ifstream inputfile1("Quarantined2.txt");
   ifstream inputfile2("Recovered.txt");
-  ofstream outputfile("Home.text", ios::trunc);
-  vector<string> s1; //4列
+  ofstream outputfile("Quarantined3.txt", ios::trunc);
   string line;
+  vector<string> s1; //4列
   while(getline(inputfile1, line)){
     vector<string> s3;
     s3 = tovector(line);
     s1.insert(s1.end(), s3.begin(), s3.end());
   }
   vector<string> s2; //6列
+  while(getline(inputfile2, line)){
+    vector<string> s3;
+    s3 = tovector(line);
+    s2.insert(s2.end(), s3.begin(), s3.end());
+  }
 
   for (int i = 0; i < s2.size()/6; ++i){
     if(stoi(s2[1+6*i]) == 1){
       for (int j = 0; j < s1.size()/4; ++j){
-        
+        if(stoi(s2[0+6*i]) == stoi(s1[0+4*j])){
+          int withstart = stoi(s2[3+6*i])-stoi(s2[2+6*i])+2;
+          int withlast = stoi(s2[3+6*i]);
+          int quastart = stoi(s1[2+4*j])+1;
+          int qualast = stoi(s1[2+4*j])+stoi(s1[3+4*j]);
+
+          if(withstart<=qualast && qualast<withlast){
+            s1[3+4*j]=to_string(qualast-withstart+stoi(s1[3+4*j]));
+          }else if(withstart<=quastart && quastart<withlast){
+            s1[2+4*j]=to_string(withstart-1);
+            s1[3+4*j]=to_string(withlast-withstart+1+stoi(s1[3+4*j]));
+          }
+        }
       }
     }
   }
 
+  for (int i = 0; i < s1.size()/4; ++i){
+    outputfile<<s1[0+i*4]<<" "<<s1[1+i*4]<<" "<<s1[2+i*4]<<" "<<s1[3+i*4]<<endl;
+  }
+  inputfile1.close();
+  inputfile2.close();
+  outputfile.close();
+  // qua("Quarantined3.txt", "Quarantined4.txt");
 }
 
 /* 
@@ -3828,6 +3852,6 @@ void EpiModel::run(void) {
     (*logfile).close();
   summary();
   outputIndividuals();
-  qua();
+  qua("Quarantined.txt", "Quarantined2.txt");
   withdraw();
 }
