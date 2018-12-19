@@ -1906,7 +1906,7 @@ void EpiModel::night(void) {
 	    if (getWithdrawDays(p)>0 && p.iday==(int)getWithdrawDays(p) && p.hospital == 0){
 	      setWithdrawn(p);              // withdraw to home
         ofstream outputfile("Withdrawed.txt", ios::app);
-        outputfile<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
+        outputfile<<(int)p.id<<" "<<nTimer<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
         outputfile.close();
       }
 	  }
@@ -3670,20 +3670,20 @@ void EpiModel::prerun(void) {
     seedinfected();
 }
 
-vector<string> tovector(stringstream inputfile1, string line1){
+vector<string> tovector(string line1){
+  string line;
   vector<string> s1;
   vector<string> s2;
-  while(getline(inputfile1, line1)){
-    stringstream ss;
-    ss << line1;
 
-    while(getline(ss, line2, ' ')){
-      s1.push_back(line2);
-    }
+  stringstream ss;
+  ss << line1;
 
-    s2.insert(s2.end(), s1.begin(), s1.end());
-    s1.clear();
+  while(getline(ss, line, ' ')){
+    s1.push_back(line);
   }
+
+  s2.insert(s2.end(), s1.begin(), s1.end());
+  s1.clear();
   return s2;
 }
 
@@ -3717,21 +3717,13 @@ vector<vector<string> > queue(int i, vector<string> s2, vector<string> s3){
 
 void qua(){
   ifstream inputfile1("Quarantined.txt");
-  string line1 = "";
-  string line2 = "";
-  vector<string> s1;
   vector<string> s2;
   vector<string> s3;
-  while(getline(inputfile1, line1)){
-    stringstream ss;
-    ss << line1;
-
-    while(getline(ss, line2, ' ')){
-      s1.push_back(line2);
-    }
-
+  string line;
+  while(getline(inputfile1, line)){
+    vector<string> s1;
+    s1 = tovector(line);
     s2.insert(s2.end(), s1.begin(), s1.end());
-    s1.clear();
   }
   ofstream outputfile("Quarantined2.text", ios::trunc);
   vector<vector<string> > a;
@@ -3749,25 +3741,27 @@ void qua(){
   outputfile.close();
 }
 
-void with(){
+void withdraw(){
   ifstream inputfile1("Quarantined2.txt");
   ifstream inputfile2("Recovered.txt");
-  string line1 = "";
-  string line2 = "";
-  vector<string> s1;
-  vector<string> s2;
-  vector<string> s3;
-  while(getline(inputfile1, line1)){
-    stringstream ss;
-    ss << line1;
-
-    while(getline(ss, line2, ' ')){
-      s1.push_back(line2);
-    }
-
-    s2.insert(s2.end(), s1.begin(), s1.end());
-    s1.clear();
+  ofstream outputfile("Home.text", ios::trunc);
+  vector<string> s1; //4列
+  string line;
+  while(getline(inputfile1, line)){
+    vector<string> s3;
+    s3 = tovector(line);
+    s1.insert(s1.end(), s3.begin(), s3.end());
   }
+  vector<string> s2; //6列
+
+  for (int i = 0; i < s2.size()/6; ++i){
+    if(stoi(s2[1+6*i]) == 1){
+      for (int j = 0; j < s1.size()/4; ++j){
+        
+      }
+    }
+  }
+
 }
 
 /* 
