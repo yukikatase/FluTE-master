@@ -3699,8 +3699,6 @@ vector<vector<string> > queue(int i, vector<string> s2, vector<string> s3){
       s2.erase(s2.begin() + j*4);
       a = queue(i, s2, s3);
       break;
-    }else if(stoi(s2[2+i*4])+stoi(s2[3+i*4]) < stoi(s2[2+j*4])){
-      break;
     }
   }
   if(a.empty()){
@@ -3741,38 +3739,110 @@ void qua(string infile, string outfile){
   outputfile.close();
 }
 
-void withdraw(){
-  ifstream inputfile1("Quarantined2.txt");
-  ifstream inputfile2("Recovered.txt");
-  ofstream outputfile("Quarantined3.txt", ios::trunc);
+void withdraw(string infile1, string infile2, string infile3, string infile4, string outfile){
+  ifstream inputfile1(infile1);
+  ifstream inputfile2(infile2);
+  ifstream inputfile3(infile3);
+  ifstream inputfile4(infile4);
+  ofstream outputfile(outfile, ios::trunc);
   string line;
-  vector<string> s1; //4列
+  vector<string> s1; //4列 quarantined
   while(getline(inputfile1, line)){
     vector<string> s3;
     s3 = tovector(line);
     s1.insert(s1.end(), s3.begin(), s3.end());
   }
-  vector<string> s2; //6列
+  vector<string> s2; //6列 recovered
   while(getline(inputfile2, line)){
     vector<string> s3;
     s3 = tovector(line);
     s2.insert(s2.end(), s3.begin(), s3.end());
   }
+  vector<string> s4; //6列 RfH
+  while(getline(inputfile3, line)){
+    vector<string> s3;
+    s3 = tovector(line);
+    s4.insert(s4.end(), s3.begin(), s3.end());
+  }
+  vector<string> s5; //5列 Dead
+  while(getline(inputfile4, line)){
+    vector<string> s3;
+    s3 = tovector(line);
+    s5.insert(s5.end(), s3.begin(), s3.end());
+  }
 
-  for (int i = 0; i < s2.size()/6; ++i){
+  for (int i = 0; i < s2.size()/6; ++i){// with
     if(stoi(s2[1+6*i]) == 1){
       for (int j = 0; j < s1.size()/4; ++j){
         if(stoi(s2[0+6*i]) == stoi(s1[0+4*j])){
-          int withstart = stoi(s2[3+6*i])-stoi(s2[2+6*i])+2;
+          int withstart = stoi(s2[3+6*i])-stoi(s2[2+6*i])+1;
           int withlast = stoi(s2[3+6*i]);
           int quastart = stoi(s1[2+4*j])+1;
           int qualast = stoi(s1[2+4*j])+stoi(s1[3+4*j]);
 
-          if(withstart<=qualast && qualast<withlast){
+          if(withstart<=qualast && qualast<=withlast && quastart<=withstart){
             s1[3+4*j]=to_string(qualast-withstart+stoi(s1[3+4*j]));
-          }else if(withstart<=quastart && quastart<withlast){
+            break;
+          }else if(withstart<=quastart && quastart<=withlast && withlast<=qualast){
             s1[2+4*j]=to_string(withstart-1);
-            s1[3+4*j]=to_string(withlast-withstart+1+stoi(s1[3+4*j]));
+            s1[3+4*j]=to_string(quastart-withstart+stoi(s1[3+4*j]));
+            break;
+          }else if(withstart<=quastart && qualast<=withlast){
+            s1[2+4*j]=to_string(withstart-1);
+            s1[3+4*j]=to_string(withlast-withstart+1);
+            break;
+          }
+        }else if(j==s1.size()/4 -1 || stoi(s2[3+6*i]) < stoi(s1[2+4*j])+1){
+          s1.insert(s1.begin()+(j-1)*4, to_string(stoi(s2[2+6*i])-1));
+          s1.insert(s1.begin()+(j-1)*4, to_string(stoi(s2[3+6*i])-stoi(s2[2+6*i])+1));
+          s1.insert(s1.begin()+(j-1)*4, s2[1+6*i]);
+          s1.insert(s1.begin()+(j-1)*4, s2[0+6*i]);
+          break;
+        }
+      }
+    }
+  }
+
+  for (int i = 0; i < s4.size()/6; ++i){// RfH
+    for (int j = 0; j < s1.size()/4; ++j){
+      if(stoi(s4[0+6*i]) == stoi(s1[0+4*j])){
+        int hosstart = stoi(s4[2+6*i])+1;
+        int hoslast = stoi(s4[2+6*i])+stoi(s4[5+6*i]);
+        int quastart = stoi(s1[2+4*j])+1;
+        int qualast = stoi(s1[2+4*j])+stoi(s1[3+4*j]);
+
+        if(hosstart<=qualast && qualast<=hoslast && quastart<=hosstart){
+          s1[3+4*j]=to_string(qualast-hosstart+stoi(s1[3+4*j]));
+          break;
+        }else if(hosstart<=quastart && quastart<=hoslast && hoslast<=qualast){
+          s1[2+4*j]=to_string(hosstart-1);
+          s1[3+4*j]=to_string(quastart-hosstart+stoi(s1[3+4*j]));
+          break;
+        }else if(hosstart<=quastart && qualast<=hoslast){
+          s1[2+4*j]=to_string(hosstart-1);
+          s1[3+4*j]=to_string(hoslast-hosstart+1);
+          break;
+        }
+      }else if(j==s1.size()/4-1 || stoi(s4[2+6*i])+stoi(s4[5+6*i]) < stoi(s1[2+4*j])+1){
+        s1.insert(s1.begin()+(j-1)*4, s4[5+6*i]);
+        s1.insert(s1.begin()+(j-1)*4, s4[2+6*i]);
+        s1.insert(s1.begin()+(j-1)*4, "0");
+        s1.insert(s1.begin()+(j-1)*4, s4[0+6*i]);
+        break;
+      }
+    }
+  }
+
+  for (int i = 0; i < s5.size()/5; ++i){// Dead
+    if(stoi(s5[1+5*i]) == 1){
+      for (int j = 0; j < s1.size()/4; ++j){
+        if(stoi(s5[0+5*i]) == stoi(s1[0+4*j])){
+          int deadstart = stoi(s5[2+5*i])+1;
+          int quastart = stoi(s1[2+4*j])+1;
+          int qualast = stoi(s1[2+4*j])+stoi(s1[3+4*j]);
+
+          if(deadstart<=qualast){
+            s1[3+4*j]=to_string(deadstart-quastart+1);
           }
         }
       }
@@ -3784,8 +3854,23 @@ void withdraw(){
   }
   inputfile1.close();
   inputfile2.close();
+  inputfile3.close();
+  inputfile4.close();
   outputfile.close();
-  // qua("Quarantined3.txt", "Quarantined4.txt");
+}
+
+void daycount(string outfile){
+  ifstream inputfile1("Quarantined4.txt");
+  ofstream outputfile(outfile);
+  string line;
+  int quacount = 0;
+  vector<string> s1; //4列
+  while(getline(inputfile1, line)){
+    vector<string> s2;
+    s2 = tovector(line);
+    quacount += stoi(s2[3]);
+  }
+  outputfile << "休んだ日数の総計" << quacount << endl;
 }
 
 /* 
@@ -3853,5 +3938,7 @@ void EpiModel::run(void) {
   summary();
   outputIndividuals();
   qua("Quarantined.txt", "Quarantined2.txt");
-  withdraw();
+  withdraw("Quarantined2.txt", "Recovered.txt", "RecoveredFromHospital.txt", "Dead.txt", "Quarantined3.txt");
+  qua("Quarantined3.txt", "Quarantined4.txt");
+  daycount("AllResult.text");
 }
