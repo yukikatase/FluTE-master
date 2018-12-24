@@ -1875,7 +1875,7 @@ void EpiModel::night(void) {
 		    p2.nQuarantineTimer = nQuarantineDays+1;
         p2.qe = nTimer;
         ofstream outputfile("Quarantined.txt", ios::app);
-        outputfile<<p2.id<<" "<<isWithdrawn(p)<<" "<<nTimer/2<<" "<<nQuarantineDays<<endl;
+        outputfile<<p2.id<<" "<<isWithdrawn(p)<<" "<<nTimer/2<<" "<<nQuarantineDays<<" "<<(int)p.age<<endl;
         outputfile.close();
 #ifdef PARALLEL
 		    if (p2.nWorkRank!=rank)
@@ -3689,23 +3689,25 @@ vector<string> tovector(string line1){
 
 vector<vector<string> > queue(int i, vector<string> s2, vector<string> s3){
   vector<vector<string> > a;
-  for (int j = i+1; j < s2.size()/4; ++j){
-    if(s2[0+i*4]==s2[0+j*4] && stoi(s2[2+i*4])+stoi(s2[3+i*4]) > stoi(s2[2+j*4])){
-      s2[3+i*4] = to_string(stoi(s2[2+j*4]) + stoi(s2[3+j*4]) - stoi(s2[2+i*4]));
+  for (int j = i+1; j < s2.size()/5; ++j){
+    if(s2[0+i*5]==s2[0+j*5] && stoi(s2[2+i*5])+stoi(s2[3+i*5]) > stoi(s2[2+j*5])){
+      s2[3+i*5] = to_string(stoi(s2[2+j*5]) + stoi(s2[3+j*5]) - stoi(s2[2+i*5]));
 
-      s2.erase(s2.begin() + j*4);
-      s2.erase(s2.begin() + j*4);
-      s2.erase(s2.begin() + j*4);
-      s2.erase(s2.begin() + j*4);
+      s2.erase(s2.begin() + j*5);
+      s2.erase(s2.begin() + j*5);
+      s2.erase(s2.begin() + j*5);
+      s2.erase(s2.begin() + j*5);
+      s2.erase(s2.begin() + j*5);
       a = queue(i, s2, s3);
       break;
     }
   }
   if(a.empty()){
-    s3.push_back(s2[0+i*4]);
-    s3.push_back(s2[1+i*4]);
-    s3.push_back(s2[2+i*4]);
-    s3.push_back(s2[3+i*4]);
+    s3.push_back(s2[0+i*5]);
+    s3.push_back(s2[1+i*5]);
+    s3.push_back(s2[2+i*5]);
+    s3.push_back(s2[3+i*5]);
+    s3.push_back(s2[4+i*5]);
     a.push_back(s2);
     a.push_back(s3);
   }
@@ -3726,14 +3728,14 @@ void qua(string infile, string outfile){
   ofstream outputfile(outfile, ios::trunc);
   vector<vector<string> > a;
 
-  for (int i = 0; i < s2.size()/4; ++i){
+  for (int i = 0; i < s2.size()/5; ++i){
     a = queue(i, s2, s3);
     s2 = a[0];
     s3 = a[1];
   }
 
-  for (int i = 0; i < s3.size()/4; ++i){
-    outputfile<<s3[0+i*4]<<" "<<s3[1+i*4]<<" "<<s3[2+i*4]<<" "<<s3[3+i*4]<<endl;
+  for (int i = 0; i < s3.size()/5; ++i){
+    outputfile<<s3[0+i*5]<<" "<<s3[1+i*5]<<" "<<s3[2+i*5]<<" "<<s3[3+i*5]<<" "<<s3[4+i*5]<<endl;
   }
   inputfile1.close();
   outputfile.close();
@@ -3746,7 +3748,7 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
   ifstream inputfile4(infile4);
   ofstream outputfile(outfile, ios::trunc);
   string line;
-  vector<string> s1; //4列 quarantined
+  vector<string> s1; //5列 quarantined
   while(getline(inputfile1, line)){
     vector<string> s3;
     s3 = tovector(line);
@@ -3771,32 +3773,67 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
     s5.insert(s5.end(), s3.begin(), s3.end());
   }
 
-  for (int i = 0; i < s2.size()/6; ++i){// with
-    if(stoi(s2[1+6*i]) == 1){
-      for (int j = 0; j < s1.size()/4; ++j){
-        if(stoi(s2[0+6*i]) == stoi(s1[0+4*j])){
-          int withstart = stoi(s2[3+6*i])-stoi(s2[2+6*i])+1;
+  for (int i = 0; i < s2.size()/6; ++i){// Reover
+    if(stoi(s2[1+6*i])==1){
+      int insert1=s1.size()/5-1;
+      int k=0;
+      int insert2=s1.size()/5-1;
+      int l=0;
+      for (int j = 0; j < s1.size()/5; ++j){
+        if(stoi(s1[2+5*j])==stoi(s2[3+6*i])-stoi(s2[2+6*i])+1 && k==0){
+          insert1=j;
+          k++;
+        }
+        if(stoi(s1[2+5*j])==stoi(s2[3+6*i])-stoi(s2[2+6*i])+2-1 && l==0){
+          insert2=j;
+          l++;
+        }
+        if(stoi(s2[0+6*i]) == stoi(s1[0+5*j])){
+          int withstart = stoi(s2[3+6*i])-stoi(s2[2+6*i])+2;
           int withlast = stoi(s2[3+6*i]);
-          int quastart = stoi(s1[2+4*j])+1;
-          int qualast = stoi(s1[2+4*j])+stoi(s1[3+4*j]);
+          int quastart = stoi(s1[2+5*j])+1;
+          int qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
 
           if(withstart<=qualast && qualast<=withlast && quastart<=withstart){
-            s1[3+4*j]=to_string(qualast-withstart+stoi(s1[3+4*j]));
+            s1[3+5*j]=to_string(qualast-withstart+stoi(s1[3+5*j]));
             break;
           }else if(withstart<=quastart && quastart<=withlast && withlast<=qualast){
-            s1[2+4*j]=to_string(withstart-1);
-            s1[3+4*j]=to_string(quastart-withstart+stoi(s1[3+4*j]));
+            s1[2+5*j]=to_string(withstart-1);
+            s1[3+5*j]=to_string(quastart-withstart+stoi(s1[3+5*j]));
+            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+            s1.insert(s1.begin()+insert2*5, s1[3+5*j]);
+            s1.insert(s1.begin()+insert2*5, s1[2+5*j]);
+            s1.insert(s1.begin()+insert2*5, s1[1+5*j]);
+            s1.insert(s1.begin()+insert2*5, s1[0+5*j]);
+            s1.erase(s1.begin()+5*(j+1));
+            s1.erase(s1.begin()+5*(j+1));
+            s1.erase(s1.begin()+5*(j+1));
+            s1.erase(s1.begin()+5*(j+1));
+            s1.erase(s1.begin()+5*(j+1));
             break;
           }else if(withstart<=quastart && qualast<=withlast){
-            s1[2+4*j]=to_string(withstart-1);
-            s1[3+4*j]=to_string(withlast-withstart+1);
+            s1[2+5*j]=to_string(withstart-1);
+            s1[3+5*j]=to_string(withlast-withstart+1);
+            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+            s1.insert(s1.begin()+insert2*5, s1[3+5*j]);
+            s1.insert(s1.begin()+insert2*5, s1[2+5*j]);
+            s1.insert(s1.begin()+insert2*5, s1[1+5*j]);
+            s1.insert(s1.begin()+insert2*5, s1[0+5*j]);
+            s1.erase(s1.begin()+5*(j+1));
+            s1.erase(s1.begin()+5*(j+1));
+            s1.erase(s1.begin()+5*(j+1));
+            s1.erase(s1.begin()+5*(j+1));
+            s1.erase(s1.begin()+5*(j+1));
+            break;
+          }else if(quastart<=withstart && withlast<=qualast){
             break;
           }
-        }else if(j==s1.size()/4 -1 || stoi(s2[3+6*i]) < stoi(s1[2+4*j])+1){
-          s1.insert(s1.begin()+(j-1)*4, to_string(stoi(s2[2+6*i])-1));
-          s1.insert(s1.begin()+(j-1)*4, to_string(stoi(s2[3+6*i])-stoi(s2[2+6*i])+1));
-          s1.insert(s1.begin()+(j-1)*4, s2[1+6*i]);
-          s1.insert(s1.begin()+(j-1)*4, s2[0+6*i]);
+        }else if(j==s1.size()/5-1){
+          s1.insert(s1.begin()+insert1*5, s2[4+6*i]);
+          s1.insert(s1.begin()+insert1*5, to_string(stoi(s2[2+6*i])-1));
+          s1.insert(s1.begin()+insert1*5, to_string(stoi(s2[3+6*i])-stoi(s2[2+6*i])+1));
+          s1.insert(s1.begin()+insert1*5, s2[1+6*i]);
+          s1.insert(s1.begin()+insert1*5, s2[0+6*i]);
           break;
         }
       }
@@ -3804,30 +3841,63 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
   }
 
   for (int i = 0; i < s4.size()/6; ++i){// RfH
-    for (int j = 0; j < s1.size()/4; ++j){
-      if(stoi(s4[0+6*i]) == stoi(s1[0+4*j])){
+    int insert=s1.size()/5-1;
+    int k=0;
+    int insert2=s1.size()/5-1;
+    int l=0;
+    for (int j = 0; j < s1.size()/5; ++j){
+      if(stoi(s1[2+5*j])==stoi(s4[2+6*i]) && k==0){
+        insert=j;
+        k++;
+      }
+      if(stoi(s1[2+5*j])==stoi(s4[2+6*i])+1-1 && l==0){
+        insert2=j;
+        l++;
+      }
+      if(stoi(s4[0+6*i]) == stoi(s1[0+5*j])){
         int hosstart = stoi(s4[2+6*i])+1;
         int hoslast = stoi(s4[2+6*i])+stoi(s4[5+6*i]);
-        int quastart = stoi(s1[2+4*j])+1;
-        int qualast = stoi(s1[2+4*j])+stoi(s1[3+4*j]);
+        int quastart = stoi(s1[2+5*j])+1;
+        int qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
 
         if(hosstart<=qualast && qualast<=hoslast && quastart<=hosstart){
-          s1[3+4*j]=to_string(qualast-hosstart+stoi(s1[3+4*j]));
+          s1[3+5*j]=to_string(qualast-hosstart+stoi(s1[3+5*j]));
           break;
         }else if(hosstart<=quastart && quastart<=hoslast && hoslast<=qualast){
-          s1[2+4*j]=to_string(hosstart-1);
-          s1[3+4*j]=to_string(quastart-hosstart+stoi(s1[3+4*j]));
+          s1[2+5*j]=to_string(hosstart-1);
+          s1[3+5*j]=to_string(quastart-hosstart+stoi(s1[3+5*j]));
+          s1.insert(s1.begin()+insert2*5, s2[4+6*i]);
+          s1.insert(s1.begin()+insert2*5, s2[3+6*i]);
+          s1.insert(s1.begin()+insert2*5, s2[2+6*i]);
+          s1.insert(s1.begin()+insert2*5, s2[1+6*i]);
+          s1.insert(s1.begin()+insert2*5, s2[0+6*i]);
+          s1.erase(s1.begin()+5*(j+1));
+          s1.erase(s1.begin()+5*(j+1));
+          s1.erase(s1.begin()+5*(j+1));
+          s1.erase(s1.begin()+5*(j+1));
+          s1.erase(s1.begin()+5*(j+1));
           break;
         }else if(hosstart<=quastart && qualast<=hoslast){
-          s1[2+4*j]=to_string(hosstart-1);
-          s1[3+4*j]=to_string(hoslast-hosstart+1);
+          s1[2+5*j]=to_string(hosstart-1);
+          s1[3+5*j]=to_string(hoslast-hosstart+1);
+          s1.insert(s1.begin()+insert2*5, s2[4+6*i]);
+          s1.insert(s1.begin()+insert2*5, s2[3+6*i]);
+          s1.insert(s1.begin()+insert2*5, s2[2+6*i]);
+          s1.insert(s1.begin()+insert2*5, s2[1+6*i]);
+          s1.insert(s1.begin()+insert2*5, s2[0+6*i]);
+          s1.erase(s1.begin()+5*(j+1));
+          s1.erase(s1.begin()+5*(j+1));
+          s1.erase(s1.begin()+5*(j+1));
+          s1.erase(s1.begin()+5*(j+1));
+          s1.erase(s1.begin()+5*(j+1));
           break;
         }
-      }else if(j==s1.size()/4-1 || stoi(s4[2+6*i])+stoi(s4[5+6*i]) < stoi(s1[2+4*j])+1){
-        s1.insert(s1.begin()+(j-1)*4, s4[5+6*i]);
-        s1.insert(s1.begin()+(j-1)*4, s4[2+6*i]);
-        s1.insert(s1.begin()+(j-1)*4, "0");
-        s1.insert(s1.begin()+(j-1)*4, s4[0+6*i]);
+      }else if(j==s1.size()/5-1){
+        s1.insert(s1.begin()+insert*5, s4[3+6*i]);
+        s1.insert(s1.begin()+insert*5, s4[5+6*i]);
+        s1.insert(s1.begin()+insert*5, s4[2+6*i]);
+        s1.insert(s1.begin()+insert*5, "0");
+        s1.insert(s1.begin()+insert*5, s4[0+6*i]);
         break;
       }
     }
@@ -3835,22 +3905,22 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
 
   for (int i = 0; i < s5.size()/5; ++i){// Dead
     if(stoi(s5[1+5*i]) == 1){
-      for (int j = 0; j < s1.size()/4; ++j){
-        if(stoi(s5[0+5*i]) == stoi(s1[0+4*j])){
+      for (int j = 0; j < s1.size()/5; ++j){
+        if(stoi(s5[0+5*i]) == stoi(s1[0+5*j])){
           int deadstart = stoi(s5[2+5*i])+1;
-          int quastart = stoi(s1[2+4*j])+1;
-          int qualast = stoi(s1[2+4*j])+stoi(s1[3+4*j]);
+          int quastart = stoi(s1[2+5*j])+1;
+          int qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
 
           if(deadstart<=qualast){
-            s1[3+4*j]=to_string(deadstart-quastart+1);
+            s1[3+5*j]=to_string(deadstart-quastart+1);
           }
         }
       }
     }
   }
 
-  for (int i = 0; i < s1.size()/4; ++i){
-    outputfile<<s1[0+i*4]<<" "<<s1[1+i*4]<<" "<<s1[2+i*4]<<" "<<s1[3+i*4]<<endl;
+  for (int i = 0; i < s1.size()/5; ++i){
+    outputfile<<s1[0+i*5]<<" "<<s1[1+i*5]<<" "<<s1[2+i*5]<<" "<<s1[3+i*5]<<" "<<s1[4+i*5]<<endl;
   }
   inputfile1.close();
   inputfile2.close();
@@ -3871,6 +3941,7 @@ void daycount(string outfile){
     quacount += stoi(s2[3]);
   }
   outputfile << "休んだ日数の総計" << quacount << endl;
+
 }
 
 /* 
