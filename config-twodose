@@ -21,5 +21,5 @@ quarantine 1
 responsedelay -1
 schoolclosuredays 3
 schoolclosurepolicy bytractandage
-schoolclosurestudents 10
+schoolclosurestudents 20
 quarantinedays 7
