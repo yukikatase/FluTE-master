@@ -34,35 +34,51 @@ int main(int argc, char *argv[]) {
 #include "epimodelparameters.h"
 #include <string>
 
+vector<string> tovector2(string line1){
+  string line;
+  vector<string> s1;
+  vector<string> s2;
 
-int result(){
-  string line = "";
-  ofstream outputfile("result.text");
-  ifstream inputfile1("RecoveredFromHospital.txt");
-  int hospital[5][2] = {};
-  int hospitalduration = 0;
+  stringstream ss;
+  ss << line1;
 
-  while(getline(inputfile1, line, ' ')){
-    hospital[(int)line[0]][(int)line[1]]++;
-    if((int)line[0]==2 || (int)line[0]==3){
-      hospitalduration += (int)line[3];
-    }
-    outputfile << line << endl;
+  while(getline(ss, line, ' ')){
+    s1.push_back(line);
   }
 
-  for (int i = 0; i < 2; ++i){
-    for (int j = 0; j < 5; ++j){
-      outputfile << hospital[j][i] << endl;
+  s2.insert(s2.end(), s1.begin(), s1.end());
+  s1.clear();
+  return s2;
+}
+
+void configRename(string R0, string schoolclosuredays, string isolation, string quarantine, string quarantinedays, string schoolclosurestudents, string seed){
+  ifstream inputfile("config-twodose");
+  string line;
+  vector<string> s1; //5列 Dead
+  while(getline(inputfile, line)){
+    vector<string> s2;
+    s2 = tovector2(line);
+    if(s2[0]=="R0"){
+      s2[1]=R0;
     }
+    if(s2[0]=="schoolclosuredays"){
+      s2[1]=schoolclosuredays;
+    }
+    if(s2[0]=="isolation"){
+      s2[1]=isolation;
+    }
+    if(s2[0]=="quarantine"){
+      s2[1]=quarantine;
+    }
+    if(s2[0]=="schoolclosurestudents"){
+      s2[1]=schoolclosurestudents;
+    }
+    if(s2[0]=="seed"){
+      s2[1]=seed;
+    }
+    s1.insert(s1.end(), s2.begin(), s2.end());
   }
-
-  ifstream inputfile2("Dead.txt");
-  getline(inputfile2, line);
-
-  inputfile1.close();
-  inputfile2.close();
-  outputfile.close();
-  return 0;
+  inputfile.close();
 }
 
 int main() {
@@ -90,11 +106,18 @@ int main() {
   outputfile8.close();
   ofstream outputfile9("School.txt", ios::trunc);
   outputfile9.close();
+  double r0[2]={1.5,2.0};
+  int schoolclosuredays[2]={3,5};
+  double isolation[2]={0.8,0.95};
+  double quarantine[2]={0.3,0.5};
+  int quarantinedays[2]={3,5};
+  int schoolclosurestudents[2]={10,15};
+  int seed[10]={1,2,3,4,5,6,7,8,9,10};
 
   EpiModelParameters parms(configname);
   EpiModel model(parms);
   model.run();
-  // result();
+  //configRename(to_string(r0[1]),to_string(schoolclosuredays[1]),to_string(isolation[1]),to_string(quarantine[1]),to_string(quarantinedays[1]),to_string(schoolclosurestudents[1]),to_string(seed[1]));
   return 0;
 }
 

@@ -2961,7 +2961,7 @@ void EpiModel::log(void) {
 /*
  * Create final report in the file `Summary'
  */
-void EpiModel::summary(void) {
+int EpiModel::summary(void) {
   ostringstream oss;
   ofstream &outfile = *sumfile;
 
@@ -3404,6 +3404,8 @@ void EpiModel::summary(void) {
   if (!rank)
 #endif
     outfile.close(); 
+
+  return nNumVaccineDosesUsed[0];
 }
 
 void EpiModel::outputIndividuals(void) {
@@ -3926,12 +3928,11 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
   outputfile.close();
 }
 
-void daycount(string outfile){
+void daycount(string outfile, int vaccine){
   ifstream inputfile1("Quarantined4.txt");
   ofstream outputfile(outfile);
   string line;
   int quacount = 0;
-  vector<string> s1; //5列
   while(getline(inputfile1, line)){
     vector<string> s2;
     s2 = tovector(line);
@@ -3943,22 +3944,59 @@ void daycount(string outfile){
   outputfile << "金額 " << quacount*145 << endl;
 
   inputfile1.close();
-  outputfile.close();
-}
 
-void anothercount(string outfile){
-  ifstream inputfile1("Quarantined4.txt");
-  ofstream outputfile(outfile);
-  string line;
+  ////////////////////
+
+  ifstream inputfile2("RecoveredFromHospital.txt");
   int hoscount = 0;
-  int hoscost[2][5] = {{10880, 15014, 17012, 20304, 11451},{81596, 41918, 45722, 43309, 16750}};
-  vector<string> s1; //5列
-  while(getline(inputfile1, line)){
+  int hoscost[2][5] = {{10880, 15014, 17012, 20304, 11451}, {81596, 41918, 45722, 43309, 16750}};
+  while(getline(inputfile2, line)){
     vector<string> s2;
     s2 = tovector(line);
-    hoscount += stoi(s2[3]);
-    
+    hoscount += hoscost[stoi(s2[4])][stoi(s2[3])];
   }
+  outputfile << "入院費 " << hoscount << endl;
+  inputfile2.close();
+  
+  //////////////////////////
+
+  ifstream inputfile3("Recovered.txt");
+  int outpatientcount = 0;
+  int outpatientcost[2][5] = {{167, 95, 115, 130, 242}, {574, 649, 700, 730, 476}};
+  while(getline(inputfile3, line)){
+    vector<string> s2;
+    s2 = tovector(line);
+    if(s2[1] == "0"){
+      outpatientcount += 3;
+    }else{
+      outpatientcount += outpatientcost[stoi(s2[5])][stoi(s2[4])];
+    }
+  }
+  outputfile << "外来費 " << outpatientcount << endl;
+  inputfile3.close();
+
+  /////////////////////////
+
+  ifstream inputfile4("Dead.txt");
+  int deadcount = 0;
+  int deadcost[5] = {1520471, 3077881, 6882779, 3698753, 1381123};
+  while(getline(inputfile4, line)){
+    vector<string> s2;
+    s2 = tovector(line);
+    deadcount += deadcost[stoi(s2[3])];
+  }
+  outputfile << "VSL " << deadcount << endl;
+  inputfile4.close();
+
+  /////////////////////////
+
+  outputfile << "number of Vaccines " << vaccine << endl;
+  outputfile << "Vaccines cost " << vaccine*30 << endl;
+  outputfile << endl;
+
+  outputfile << "総計 " << quacount*145 + hoscount + outpatientcount + deadcount + vaccine*30 << endl;
+
+  outputfile.close();
 }
 
 /* 
@@ -4023,11 +4061,11 @@ void EpiModel::run(void) {
   }
   if (logfile)
     (*logfile).close();
-  summary();
+  int vaccine_number = summary();
   outputIndividuals();
   qua("Quarantined.txt", "Quarantined2.txt");
   withdraw("Quarantined2.txt", "Recovered.txt", "RecoveredFromHospital.txt", "Dead.txt", "Quarantined3.txt");
   qua("Quarantined3.txt", "Quarantined4.txt");
-  daycount("AllResult.text");
-  anothercount("AllResult.text");
+  daycount("AllResult.text", vaccine_number);
+  //configRename();
 }

@@ -437,7 +437,7 @@ class EpiModel {
   void travel_end(void);
   void response(void);
   virtual void log(void);
-  virtual void summary(void);
+  virtual int summary(void);
   virtual void outputIndividuals(void);
   bool isEligible(const Person &p, int nVacNum);
 
