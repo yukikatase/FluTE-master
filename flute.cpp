@@ -81,8 +81,24 @@ void configRename(string R0, string schoolclosuredays, string isolation, string 
   inputfile.close();
 
   ofstream outputfile("config-twodose");
-  for (int i = 0; i < s1.size()/2; ++i){
-    outputfile<<s1[0+i*2]<<" "<<s1[1+i*2]<<endl;
+  while(!s1.empty()){
+    if(s1[0]=="preexistingimmunitybyage" || s1[0]=="highriskfraction"){
+      outputfile<<s1[0]<<" "<<s1[1]<<" "<<s1[2]<<" "<<s1[3]<<" "<<s1[4]<<" "<<s1[5]<<endl;
+      for (int i = 0; i < 6; ++i){
+        s1.erase(s1.begin());
+      }
+
+    }else if(s1[0]=="vaccinedata"){
+      outputfile<<s1[0]<<" "<<s1[1]<<" "<<s1[2]<<" "<<s1[3]<<" "<<s1[4]<<" "<<s1[5]<<" "<<s1[6]<<" "<<s1[7]<<" "<<s1[8]<<" "<<s1[9]<<" "<<s1[10]<<" "<<s1[11]<<endl;
+      for (int i = 0; i < 12; ++i){
+        s1.erase(s1.begin());
+      }
+
+    }else{
+      outputfile<<s1[0]<<" "<<s1[1]<<endl;
+      s1.erase(s1.begin());
+      s1.erase(s1.begin());
+    }
   }
   outputfile.close();
 }
@@ -123,7 +139,7 @@ int main() {
   EpiModelParameters parms(configname);
   EpiModel model(parms);
   model.run();
-  configRename(to_string(r0[1]),to_string(schoolclosuredays[1]),to_string(isolation[1]),to_string(quarantine[1]),to_string(quarantinedays[1]),to_string(schoolclosurestudents[1]),to_string(seed[1]));
+  //configRename(to_string(r0[1]),to_string(schoolclosuredays[1]),to_string(isolation[1]),to_string(quarantine[1]),to_string(quarantinedays[1]),to_string(schoolclosurestudents[1]),to_string(seed[1]));
   return 0;
 }
 

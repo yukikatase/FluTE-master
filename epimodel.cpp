@@ -4077,8 +4077,11 @@ void EpiModel::run(void) {
   int vaccine_number = summary();
   outputIndividuals();
   qua("Quarantined.txt", "Quarantined2.txt");
+  cout<<"qua ok"<<endl;
   withdraw("Quarantined2.txt", "Recovered.txt", "RecoveredFromHospital.txt", "Dead.txt", "Quarantined3.txt");
+  cout<<"with ok"<<endl;
   qua("Quarantined3.txt", "Quarantined4.txt");
+  cout<<"qua ok"<<endl;
   daycount("AllResult.text", vaccine_number);
   //configRename();
 }

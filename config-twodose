@@ -1,4 +1,3 @@
-# setup for reactively vaccinating 70% of the population of Seattle with a vaccine that requires a boost on day 21
 label example-twodose
 datafile seattle
 logfile 1
@@ -11,8 +10,8 @@ reactivestrategy mass
 vaccinationfraction 0.5
 seedinfected 10
 seedinfecteddaily 0
-vaccinedata 0 0.4 0.4 0.67 0 0 0 0 0 0 0
 responsethreshhold 0.001
+vaccinedata 0 0.4 0.4 0.67 0 0 0 0 0 0 0
 highriskfraction 0.089 0.089 0.212 0.212 0.0
 liberalleave 0
 responsedelay -1
