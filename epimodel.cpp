@@ -3764,24 +3764,6 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
   }
   inputfile2.close();
 
-  ifstream inputfile3(infile3);
-  vector<string> s4; //6列 RfH
-  while(getline(inputfile3, line)){
-    vector<string> s3;
-    s3 = tovector(line);
-    s4.insert(s4.end(), s3.begin(), s3.end());
-  }
-  inputfile3.close();
-  
-  ifstream inputfile4(infile4);
-  vector<string> s5; //5列 Dead
-  while(getline(inputfile4, line)){
-    vector<string> s3;
-    s3 = tovector(line);
-    s5.insert(s5.end(), s3.begin(), s3.end());
-  }
-  inputfile4.close();
-
   for (int i = 0; i < s2.size()/6; ++i){// Reover
     if(stoi(s2[1+6*i])==1){
       int insert2=s1.size()/5-1;
@@ -3846,6 +3828,18 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
       }
     }
   }
+  s2.clear();
+  s2.shrink_to_fit(); //メモリ削減
+
+
+  ifstream inputfile3(infile3);
+  vector<string> s4; //6列 RfH
+  while(getline(inputfile3, line)){
+    vector<string> s3;
+    s3 = tovector(line);
+    s4.insert(s4.end(), s3.begin(), s3.end());
+  }
+  inputfile3.close();
 
   for (int i = 0; i < s4.size()/6; ++i){// RfH
 
@@ -3909,6 +3903,18 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
     }
   }
 
+  s4.clear();
+  s4.shrink_to_fit(); //メモリ削減
+
+  ifstream inputfile4(infile4);
+  vector<string> s5; //5列 Dead
+  while(getline(inputfile4, line)){
+    vector<string> s3;
+    s3 = tovector(line);
+    s5.insert(s5.end(), s3.begin(), s3.end());
+  }
+  inputfile4.close();
+
   for (int i = 0; i < s5.size()/5; ++i){// Dead
     if(stoi(s5[1+5*i]) == 1){
       for (int j = 0; j < s1.size()/5; ++j){
@@ -3924,6 +3930,9 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
       }
     }
   }
+
+  s5.clear();
+  s5.shrink_to_fit(); //メモリ削減
 
   ofstream outputfile(outfile, ios::trunc);
   for (int i = 0; i < s1.size()/5; ++i){

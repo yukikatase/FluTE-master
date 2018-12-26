@@ -117,7 +117,7 @@ int main() {
   EpiModelParameters parms(configname);
   EpiModel model(parms);
   model.run();
-  //configRename(to_string(r0[1]),to_string(schoolclosuredays[1]),to_string(isolation[1]),to_string(quarantine[1]),to_string(quarantinedays[1]),to_string(schoolclosurestudents[1]),to_string(seed[1]));
+  configRename(to_string(r0[1]),to_string(schoolclosuredays[1]),to_string(isolation[1]),to_string(quarantine[1]),to_string(quarantinedays[1]),to_string(schoolclosurestudents[1]),to_string(seed[1]));
   return 0;
 }
 
