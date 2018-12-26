@@ -79,6 +79,12 @@ void configRename(string R0, string schoolclosuredays, string isolation, string 
     s1.insert(s1.end(), s2.begin(), s2.end());
   }
   inputfile.close();
+
+  ofstream outputfile("config-twodose");
+  for (int i = 0; i < s1.size()/2; ++i){
+    outputfile<<s1[0+i*2]<<" "<<s1[1+i*2]<<endl;
+  }
+  outputfile.close();
 }
 
 int main() {
