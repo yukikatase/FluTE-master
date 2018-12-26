@@ -3744,36 +3744,43 @@ void qua(string infile, string outfile){
 }
 
 void withdraw(string infile1, string infile2, string infile3, string infile4, string outfile){
-  ifstream inputfile1(infile1);
-  ifstream inputfile2(infile2);
-  ifstream inputfile3(infile3);
-  ifstream inputfile4(infile4);
-  ofstream outputfile(outfile, ios::trunc);
   string line;
+
+  ifstream inputfile1(infile1);
   vector<string> s1; //5列 quarantined
   while(getline(inputfile1, line)){
     vector<string> s3;
     s3 = tovector(line);
     s1.insert(s1.end(), s3.begin(), s3.end());
   }
+  inputfile1.close();
+
+  ifstream inputfile2(infile2);
   vector<string> s2; //6列 recovered
   while(getline(inputfile2, line)){
     vector<string> s3;
     s3 = tovector(line);
     s2.insert(s2.end(), s3.begin(), s3.end());
   }
+  inputfile2.close();
+
+  ifstream inputfile3(infile3);
   vector<string> s4; //6列 RfH
   while(getline(inputfile3, line)){
     vector<string> s3;
     s3 = tovector(line);
     s4.insert(s4.end(), s3.begin(), s3.end());
   }
+  inputfile3.close();
+  
+  ifstream inputfile4(infile4);
   vector<string> s5; //5列 Dead
   while(getline(inputfile4, line)){
     vector<string> s3;
     s3 = tovector(line);
     s5.insert(s5.end(), s3.begin(), s3.end());
   }
+  inputfile4.close();
 
   for (int i = 0; i < s2.size()/6; ++i){// Reover
     if(stoi(s2[1+6*i])==1){
@@ -3918,13 +3925,10 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
     }
   }
 
+  ofstream outputfile(outfile, ios::trunc);
   for (int i = 0; i < s1.size()/5; ++i){
     outputfile<<s1[0+i*5]<<" "<<s1[1+i*5]<<" "<<s1[2+i*5]<<" "<<s1[3+i*5]<<" "<<s1[4+i*5]<<endl;
   }
-  inputfile1.close();
-  inputfile2.close();
-  inputfile3.close();
-  inputfile4.close();
   outputfile.close();
 }
 
