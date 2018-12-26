@@ -12,11 +12,11 @@ seedinfected 10
 seedinfecteddaily 0
 responsethreshhold 0.001
 vaccinedata 0 0.4 0.4 0.67 0 0 0 0 0 0 0
-highriskfraction 0.089 0.089 0.212 0.212 0.0
+highriskfraction 0.064 0.064 0.144 0.144 0.40
 liberalleave 0
 responsedelay -1
 schoolclosurepolicy bytractandage
-seed 1
+seed 10
 R0 1.5
 schoolclosuredays 3
 isolation 0.8

@@ -355,6 +355,34 @@ EpiModel::EpiModel(EpiModelParameters &params) {
   }
 }
 
+vector<string> tovector2(string line1){
+  string line;
+  vector<string> s1;
+  vector<string> s2;
+
+  stringstream ss;
+  ss << line1;
+
+  while(getline(ss, line, ' ')){
+    s1.push_back(line);
+  }
+
+  s2.insert(s2.end(), s1.begin(), s1.end());
+  s1.clear();
+  return s2;
+}
+
+string get_runnumber(){
+  ifstream runnumber("run-number");
+  string line;
+  vector<string> s2;
+  while(getline(runnumber, line)){
+    s2 = tovector2(line);
+  }
+  runnumber.close();
+  return to_string(stoi(s2[0])-1);
+}
+
 /*
  * Read in census tracts information and create communities
  */
@@ -1874,7 +1902,8 @@ void EpiModel::night(void) {
 		    setQuarantined(p2);  // household quarantine
 		    p2.nQuarantineTimer = nQuarantineDays+1;
         p2.qe = nTimer;
-        ofstream outputfile("Quarantined.txt", ios::app);
+        string rn = get_runnumber();
+        ofstream outputfile(rn + "Quarantined.txt", ios::app);
         outputfile<<p2.id<<" "<<isWithdrawn(p)<<" "<<nTimer/2<<" "<<nQuarantineDays<<" "<<(int)p.age<<endl;
         outputfile.close();
 #ifdef PARALLEL
@@ -1890,7 +1919,8 @@ void EpiModel::night(void) {
         p.dead = 1;
         p.hospital = 1;
         setWithdrawn(p);
-        ofstream outputfile("Dead.txt", ios::app);
+        string rn = get_runnumber();
+        ofstream outputfile(rn + "Dead.txt", ios::app);
         outputfile<<(int)p.id<<" "<<isQuarantined(p)<<" "<<nTimer/2<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
         outputfile.close();
       }
@@ -1898,14 +1928,16 @@ void EpiModel::night(void) {
       if (p.iday==(int)getIncubationDays(p) && p.HospitalizationTimer > 0 && p.dead == 0){
         p.hospital = 1;
         setWithdrawn(p);
-        ofstream outputfile("RecoveredFromHospital.txt", ios::app);
+        string rn = get_runnumber();
+        ofstream outputfile(rn + "RecoveredFromHospital.txt", ios::app);
         outputfile<<(int)p.id<<" "<<isQuarantined(p)<<" "<<nTimer/2<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<" "<<hospitalization[isHighRisk(p)][p.age]<<endl;
         outputfile.close();
       }
 
 	    if (getWithdrawDays(p)>0 && p.iday==(int)getWithdrawDays(p) && p.hospital == 0){
 	      setWithdrawn(p);              // withdraw to home
-        ofstream outputfile("Withdrawed.txt", ios::app);
+        string rn = get_runnumber();
+        ofstream outputfile(rn + "Withdrawed.txt", ios::app);
         outputfile<<(int)p.id<<" "<<nTimer/2<<" "<<(int)getWithdrawDays(p)<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
         outputfile.close();
       }
@@ -1918,7 +1950,8 @@ void EpiModel::night(void) {
 	  p.status &= ~(SUSCEPTIBLE|INFECTED|SYMPTOMATIC|WITHDRAWN); // recovered
 	  comm.ninf[p.age]--;
 	  p.iday=0;
-    ofstream outputfile("Recovered.txt", ios::app);
+    string rn = get_runnumber();
+    ofstream outputfile(rn + "Recovered.txt", ios::app);
     outputfile<<(int)p.id<<" "<<isWithdrawn(p)<<" "<<VLOADNDAY - (int)getWithdrawDays(p)<<" "<<nTimer/2<<" "<<(int)p.age<<" "<<(int)isHighRisk(p)<<endl;
     outputfile.close();
 	}
@@ -1949,7 +1982,8 @@ void EpiModel::night(void) {
   }
       if (isQuarantined(p) && --p.nQuarantineTimer<=0) {
 	clearQuarantined(p);  // quarantine over for this person
-        ofstream outputfile("clearQuarantined.txt", ios::app);
+        string rn = get_runnumber();
+        ofstream outputfile(rn + "clearQuarantined.txt", ios::app);
         outputfile<<p.id<<" "<<nTimer/2<<endl;
         outputfile.close();
 #ifdef PARALLEL
@@ -3672,352 +3706,381 @@ void EpiModel::prerun(void) {
     seedinfected();
 }
 
-vector<string> tovector(string line1){
-  string line;
-  vector<string> s1;
-  vector<string> s2;
+// vector<vector<string> > queue(int i, vector<string> s2, vector<string> s3){
+//   vector<vector<string> > a;
+//   for (int j = i+1; j < s2.size()/5; ++j){
+//     if(s2[0+i*5]==s2[0+j*5] && stoi(s2[2+i*5])+stoi(s2[3+i*5]) > stoi(s2[2+j*5])){
+//       s2[3+i*5] = to_string(stoi(s2[2+j*5]) + stoi(s2[3+j*5]) - stoi(s2[2+i*5]));
 
-  stringstream ss;
-  ss << line1;
-
-  while(getline(ss, line, ' ')){
-    s1.push_back(line);
-  }
-
-  s2.insert(s2.end(), s1.begin(), s1.end());
-  s1.clear();
-  return s2;
-}
-
-vector<vector<string> > queue(int i, vector<string> s2, vector<string> s3){
-  vector<vector<string> > a;
-  for (int j = i+1; j < s2.size()/5; ++j){
-    if(s2[0+i*5]==s2[0+j*5] && stoi(s2[2+i*5])+stoi(s2[3+i*5]) > stoi(s2[2+j*5])){
-      s2[3+i*5] = to_string(stoi(s2[2+j*5]) + stoi(s2[3+j*5]) - stoi(s2[2+i*5]));
-
-      s2.erase(s2.begin() + j*5);
-      s2.erase(s2.begin() + j*5);
-      s2.erase(s2.begin() + j*5);
-      s2.erase(s2.begin() + j*5);
-      s2.erase(s2.begin() + j*5);
-      a = queue(i, s2, s3);
-      break;
-    }
-  }
-  if(a.empty()){
-    s3.push_back(s2[0+i*5]);
-    s3.push_back(s2[1+i*5]);
-    s3.push_back(s2[2+i*5]);
-    s3.push_back(s2[3+i*5]);
-    s3.push_back(s2[4+i*5]);
-    a.push_back(s2);
-    a.push_back(s3);
-  }
-  return a;
-}
+//       s2.erase(s2.begin() + j*5);
+//       s2.erase(s2.begin() + j*5);
+//       s2.erase(s2.begin() + j*5);
+//       s2.erase(s2.begin() + j*5);
+//       s2.erase(s2.begin() + j*5);
+//       a = queue(i, s2, s3);
+//       break;
+//     }
+//   }
+//   if(a.empty()){
+//     s3.push_back(s2[0+i*5]);
+//     s3.push_back(s2[1+i*5]);
+//     s3.push_back(s2[2+i*5]);
+//     s3.push_back(s2[3+i*5]);
+//     s3.push_back(s2[4+i*5]);
+//     a.push_back(s2);
+//     a.push_back(s3);
+//   }
+//   return a;
+// }
 
 
-void qua(string infile, string outfile){
-  ifstream inputfile1(infile);
-  vector<string> s2;
-  vector<string> s3;
-  string line;
-  while(getline(inputfile1, line)){
-    vector<string> s1;
-    s1 = tovector(line);
-    s2.insert(s2.end(), s1.begin(), s1.end());
-  }
-  ofstream outputfile(outfile, ios::trunc);
-  vector<vector<string> > a;
+// void qua(string infile, string outfile){
+//   ifstream inputfile1(infile);
+//   vector<string> s2;
+//   vector<string> s3;
+//   string line;
+//   while(getline(inputfile1, line)){
+//     vector<string> s1;
+//     s1 = tovector(line);
+//     s2.insert(s2.end(), s1.begin(), s1.end());
+//   }
+//   ofstream outputfile(outfile, ios::trunc);
+//   vector<vector<string> > a;
 
-  for (int i = 0; i < s2.size()/5; ++i){
-    a = queue(i, s2, s3);
-    s2 = a[0];
-    s3 = a[1];
-  }
+//   for (int i = 0; i < s2.size()/5; ++i){
+//     a = queue(i, s2, s3);
+//     s2 = a[0];
+//     s3 = a[1];
+//   }
 
-  for (int i = 0; i < s3.size()/5; ++i){
-    outputfile<<s3[0+i*5]<<" "<<s3[1+i*5]<<" "<<s3[2+i*5]<<" "<<s3[3+i*5]<<" "<<s3[4+i*5]<<endl;
-  }
-  inputfile1.close();
-  outputfile.close();
-}
+//   for (int i = 0; i < s3.size()/5; ++i){
+//     outputfile<<s3[0+i*5]<<" "<<s3[1+i*5]<<" "<<s3[2+i*5]<<" "<<s3[3+i*5]<<" "<<s3[4+i*5]<<endl;
+//   }
+//   inputfile1.close();
+//   outputfile.close();
+// }
 
-void withdraw(string infile1, string infile2, string infile3, string infile4, string outfile){
-  string line;
+// void withdraw(string infile1, string infile2, string infile3, string infile4, string outfile){
+//   string line;
 
-  ifstream inputfile1(infile1);
-  vector<string> s1; //5列 quarantined
-  while(getline(inputfile1, line)){
-    vector<string> s3;
-    s3 = tovector(line);
-    s1.insert(s1.end(), s3.begin(), s3.end());
-  }
-  inputfile1.close();
+//   ifstream inputfile1(infile1);
+//   vector<string> s1; //5列 quarantined
+//   while(getline(inputfile1, line)){
+//     vector<string> s3;
+//     s3 = tovector(line);
+//     s1.insert(s1.end(), s3.begin(), s3.end());
+//     s3.clear();
+//     s3.shrink_to_fit();
+//   }
+//   inputfile1.close();
 
-  ifstream inputfile2(infile2);
-  vector<string> s2; //6列 recovered
-  while(getline(inputfile2, line)){
-    vector<string> s3;
-    s3 = tovector(line);
-    s2.insert(s2.end(), s3.begin(), s3.end());
-  }
-  inputfile2.close();
+//   ifstream inputfile2(infile2);
+//   vector<string> s2; //6列 recovered
+//   while(getline(inputfile2, line)){
+//     vector<string> s3;
+//     s3 = tovector(line);
+//     if(s3[1]=="1"){
+//       s2.insert(s2.end(), s3.begin(), s3.end());
+//     }
+//     s3.clear();
+//     s3.shrink_to_fit();
+//   }
+//   inputfile2.close();
+//   cout<<"with before recover"<<endl;
+//   int insert2;
+//   int l;
+//   int withstart;
+//   int withlast;
+//   int quastart;
+//   int qualast;
 
-  for (int i = 0; i < s2.size()/6; ++i){// Reover
-    if(stoi(s2[1+6*i])==1){
-      int insert2=s1.size()/5-1;
-      int l=0;
-      for (int j = 0; j < s1.size()/5; ++j){
-        if(stoi(s1[2+5*j])==stoi(s2[3+6*i])-stoi(s2[2+6*i])+1 && l==0){
-          insert2=j;
-          l++;
-        }
-        if(stoi(s1[2+5*j])>stoi(s2[3+6*i])-stoi(s2[2+6*i])+1 && l==0){
-          insert2=j-1;
-          l++;
-        }
-        if(stoi(s2[0+6*i]) == stoi(s1[0+5*j])){
-          int withstart = stoi(s2[3+6*i])-stoi(s2[2+6*i])+2;
-          int withlast = stoi(s2[3+6*i]);
-          int quastart = stoi(s1[2+5*j])+1;
-          int qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
+//   for (int i = 0; i < s2.size()/6; ++i){// Reover
+//     insert2=s1.size()/5-1;
+//     l=0;
+//     for (int j = 0; j < s1.size()/5; ++j){
+//       if(stoi(s1[2+5*j])==stoi(s2[3+6*i])-stoi(s2[2+6*i])+1 && l==0){
+//         insert2=j;
+//         l++;
+//       }
+//       if(stoi(s1[2+5*j])>stoi(s2[3+6*i])-stoi(s2[2+6*i])+1 && l==0){
+//         insert2=j-1;
+//         l++;
+//       }
+//       if(stoi(s2[0+6*i]) == stoi(s1[0+5*j])){
+//         withstart = stoi(s2[3+6*i])-stoi(s2[2+6*i])+2;
+//         withlast = stoi(s2[3+6*i]);
+//         quastart = stoi(s1[2+5*j])+1;
+//         qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
 
-          if(withstart<=qualast && qualast<=withlast && quastart<=withstart){
-            s1[3+5*j]=to_string(qualast-withstart+stoi(s1[3+5*j]));
-            break;
-          }else if(withstart<=quastart && quastart<=withlast && withlast<=qualast){
-            s1[2+5*j]=to_string(withstart-1);
-            s1[3+5*j]=to_string(quastart-withstart+stoi(s1[3+5*j]));
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.erase(s1.begin()+5*(j+1));
-            s1.erase(s1.begin()+5*(j+1));
-            s1.erase(s1.begin()+5*(j+1));
-            s1.erase(s1.begin()+5*(j+1));
-            s1.erase(s1.begin()+5*(j+1));
-            break;
-          }else if(withstart<=quastart && qualast<=withlast){
-            s1[2+5*j]=to_string(withstart-1);
-            s1[3+5*j]=to_string(withlast-withstart+1);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-            s1.erase(s1.begin()+5*(j+1));
-            s1.erase(s1.begin()+5*(j+1));
-            s1.erase(s1.begin()+5*(j+1));
-            s1.erase(s1.begin()+5*(j+1));
-            s1.erase(s1.begin()+5*(j+1));
-            break;
-          }else if(quastart<=withstart && withlast<=qualast){
-            break;
-          }
-        }else if(j==s1.size()/5-1){
-          s1.insert(s1.begin()+insert2*5, s2[4+6*i]);
-          s1.insert(s1.begin()+insert2*5, to_string(stoi(s2[2+6*i])-1));
-          s1.insert(s1.begin()+insert2*5, to_string(stoi(s2[3+6*i])-stoi(s2[2+6*i])+1));
-          s1.insert(s1.begin()+insert2*5, s2[1+6*i]);
-          s1.insert(s1.begin()+insert2*5, s2[0+6*i]);
-          break;
-        }
-      }
-    }
-  }
-  s2.clear();
-  s2.shrink_to_fit(); //メモリ削減
+//         if(withstart<=qualast && qualast<=withlast && quastart<=withstart){
+//           s1[3+5*j]=to_string(qualast-withstart+stoi(s1[3+5*j]));
+//           break;
+//         }else if(withstart<=quastart && quastart<=withlast && withlast<=qualast){
+//           s1[2+5*j]=to_string(withstart-1);
+//           s1[3+5*j]=to_string(quastart-withstart+stoi(s1[3+5*j]));
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.shrink_to_fit();
+//           break;
+//         }else if(withstart<=quastart && qualast<=withlast){
+//           s1[2+5*j]=to_string(withstart-1);
+//           s1[3+5*j]=to_string(withlast-withstart+1);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.shrink_to_fit();
+//           break;
+//         }else if(quastart<=withstart && withlast<=qualast){
+//           break;
+//         }
+//       }else if(j==s1.size()/5-1){
+//         s1.insert(s1.begin()+insert2*5, s2[4+6*i]);
+//         s1.insert(s1.begin()+insert2*5, to_string(stoi(s2[2+6*i])-1));
+//         s1.insert(s1.begin()+insert2*5, to_string(stoi(s2[3+6*i])-stoi(s2[2+6*i])+1));
+//         s1.insert(s1.begin()+insert2*5, s2[1+6*i]);
+//         s1.insert(s1.begin()+insert2*5, s2[0+6*i]);
+//         break;
+//       }
+//     }
+//   }
+//   s2.clear();
+//   s2.shrink_to_fit(); //メモリ削減
 
 
-  ifstream inputfile3(infile3);
-  vector<string> s4; //6列 RfH
-  while(getline(inputfile3, line)){
-    vector<string> s3;
-    s3 = tovector(line);
-    s4.insert(s4.end(), s3.begin(), s3.end());
-  }
-  inputfile3.close();
+//   ifstream inputfile3(infile3);
+//   vector<string> s4; //6列 RfH
+//   while(getline(inputfile3, line)){
+//     vector<string> s3;
+//     s3 = tovector(line);
+//     s4.insert(s4.end(), s3.begin(), s3.end());
+//     s3.clear();
+//     s3.shrink_to_fit();
+//   }
+//   inputfile3.close();
+//   cout<<"with before RfH"<<endl;
 
-  for (int i = 0; i < s4.size()/6; ++i){// RfH
+//   for (int i = 0; i < s4.size()/6; ++i){// RfH
 
-    int insert2=s1.size()/5-1;
-    int l=0;
-    for (int j = 0; j < s1.size()/5; ++j){
-      if(stoi(s1[2+5*j])==stoi(s4[2+6*i]) && l==0){
-        insert2=j;
-        l++;
-      }
-      if(stoi(s1[2+5*j])>stoi(s4[2+6*i]) && l==0){
-        insert2=j-1;
-        l++;
-      }
-      if(stoi(s4[0+6*i]) == stoi(s1[0+5*j])){
-        int hosstart = stoi(s4[2+6*i])+1;
-        int hoslast = stoi(s4[2+6*i])+stoi(s4[5+6*i]);
-        int quastart = stoi(s1[2+5*j])+1;
-        int qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
+//     int insert2=s1.size()/5-1;
+//     int l=0;
+//     for (int j = 0; j < s1.size()/5; ++j){
+//       if(stoi(s1[2+5*j])==stoi(s4[2+6*i]) && l==0){
+//         insert2=j;
+//         l++;
+//       }
+//       if(stoi(s1[2+5*j])>stoi(s4[2+6*i]) && l==0){
+//         insert2=j-1;
+//         l++;
+//       }
+//       if(stoi(s4[0+6*i]) == stoi(s1[0+5*j])){
+//         int hosstart = stoi(s4[2+6*i])+1;
+//         int hoslast = stoi(s4[2+6*i])+stoi(s4[5+6*i]);
+//         int quastart = stoi(s1[2+5*j])+1;
+//         int qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
 
-        if(hosstart<=qualast && qualast<=hoslast && quastart<=hosstart){
-          s1[3+5*j]=to_string(qualast-hosstart+stoi(s1[3+5*j]));
-          break;
-        }else if(hosstart<=quastart && quastart<=hoslast && hoslast<=qualast){
-          s1[2+5*j]=to_string(hosstart-1);
-          s1[3+5*j]=to_string(quastart-hosstart+stoi(s1[3+5*j]));
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.erase(s1.begin()+5*(j+1));
-          s1.erase(s1.begin()+5*(j+1));
-          s1.erase(s1.begin()+5*(j+1));
-          s1.erase(s1.begin()+5*(j+1));
-          s1.erase(s1.begin()+5*(j+1));
-          break;
-        }else if(hosstart<=quastart && qualast<=hoslast){
-          s1[2+5*j]=to_string(hosstart-1);
-          s1[3+5*j]=to_string(hoslast-hosstart+1);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
-          s1.erase(s1.begin()+5*(j+1));
-          s1.erase(s1.begin()+5*(j+1));
-          s1.erase(s1.begin()+5*(j+1));
-          s1.erase(s1.begin()+5*(j+1));
-          s1.erase(s1.begin()+5*(j+1));
-          break;
-        }
-      }else if(j==s1.size()/5-1){
-        s1.insert(s1.begin()+insert2*5, s4[3+6*i]);
-        s1.insert(s1.begin()+insert2*5, s4[5+6*i]);
-        s1.insert(s1.begin()+insert2*5, s4[2+6*i]);
-        s1.insert(s1.begin()+insert2*5, "0");
-        s1.insert(s1.begin()+insert2*5, s4[0+6*i]);
-        break;
-      }
-    }
-  }
+//         if(hosstart<=qualast && qualast<=hoslast && quastart<=hosstart){
+//           s1[3+5*j]=to_string(qualast-hosstart+stoi(s1[3+5*j]));
+//           break;
+//         }else if(hosstart<=quastart && quastart<=hoslast && hoslast<=qualast){
+//           s1[2+5*j]=to_string(hosstart-1);
+//           s1[3+5*j]=to_string(quastart-hosstart+stoi(s1[3+5*j]));
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           break;
+//         }else if(hosstart<=quastart && qualast<=hoslast){
+//           s1[2+5*j]=to_string(hosstart-1);
+//           s1[3+5*j]=to_string(hoslast-hosstart+1);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.insert(s1.begin()+insert2*5, s1[4+5*j]);
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           s1.erase(s1.begin()+5*(j+1));
+//           break;
+//         }
+//       }else if(j==s1.size()/5-1){
+//         s1.insert(s1.begin()+insert2*5, s4[3+6*i]);
+//         s1.insert(s1.begin()+insert2*5, s4[5+6*i]);
+//         s1.insert(s1.begin()+insert2*5, s4[2+6*i]);
+//         s1.insert(s1.begin()+insert2*5, "0");
+//         s1.insert(s1.begin()+insert2*5, s4[0+6*i]);
+//         break;
+//       }
+//     }
+//   }
 
-  s4.clear();
-  s4.shrink_to_fit(); //メモリ削減
+//   s4.clear();
+//   s4.shrink_to_fit(); //メモリ削減
 
-  ifstream inputfile4(infile4);
-  vector<string> s5; //5列 Dead
-  while(getline(inputfile4, line)){
-    vector<string> s3;
-    s3 = tovector(line);
-    s5.insert(s5.end(), s3.begin(), s3.end());
-  }
-  inputfile4.close();
+//   ifstream inputfile4(infile4);
+//   vector<string> s5; //5列 Dead
+//   while(getline(inputfile4, line)){
+//     vector<string> s3;
+//     s3 = tovector(line);
+//     s5.insert(s5.end(), s3.begin(), s3.end());
+//     s3.clear();
+//     s3.shrink_to_fit();
+//   }
+//   inputfile4.close();
 
-  for (int i = 0; i < s5.size()/5; ++i){// Dead
-    if(stoi(s5[1+5*i]) == 1){
-      for (int j = 0; j < s1.size()/5; ++j){
-        if(stoi(s5[0+5*i]) == stoi(s1[0+5*j])){
-          int deadstart = stoi(s5[2+5*i])+1;
-          int quastart = stoi(s1[2+5*j])+1;
-          int qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
+//   for (int i = 0; i < s5.size()/5; ++i){// Dead
+//     if(stoi(s5[1+5*i]) == 1){
+//       for (int j = 0; j < s1.size()/5; ++j){
+//         if(stoi(s5[0+5*i]) == stoi(s1[0+5*j])){
+//           int deadstart = stoi(s5[2+5*i])+1;
+//           int quastart = stoi(s1[2+5*j])+1;
+//           int qualast = stoi(s1[2+5*j])+stoi(s1[3+5*j]);
 
-          if(deadstart<=qualast){
-            s1[3+5*j]=to_string(deadstart-quastart+1);
-          }
-        }
-      }
-    }
-  }
+//           if(deadstart<=qualast){
+//             s1[3+5*j]=to_string(deadstart-quastart+1);
+//           }
+//         }
+//       }
+//     }
+//   }
 
-  s5.clear();
-  s5.shrink_to_fit(); //メモリ削減
+//   s5.clear();
+//   s5.shrink_to_fit(); //メモリ削減
 
-  ofstream outputfile(outfile, ios::trunc);
-  for (int i = 0; i < s1.size()/5; ++i){
-    outputfile<<s1[0+i*5]<<" "<<s1[1+i*5]<<" "<<s1[2+i*5]<<" "<<s1[3+i*5]<<" "<<s1[4+i*5]<<endl;
-  }
-  outputfile.close();
-}
+//   ofstream outputfile(outfile, ios::trunc);
+//   for (int i = 0; i < s1.size()/5; ++i){
+//     outputfile<<s1[0+i*5]<<" "<<s1[1+i*5]<<" "<<s1[2+i*5]<<" "<<s1[3+i*5]<<" "<<s1[4+i*5]<<endl;
+//   }
+//   outputfile.close();
+// }
 
-void daycount(string outfile, int vaccine){
-  ifstream inputfile1("Quarantined4.txt");
-  ofstream outputfile(outfile);
-  string line;
-  int quacount = 0;
-  while(getline(inputfile1, line)){
-    vector<string> s2;
-    s2 = tovector(line);
-    if(s2[4]=="2" || s2[4]=="3"){
-      quacount += stoi(s2[3]);
-    }
-  }
-  outputfile << "休んだ日数の総計 " << quacount << endl;
-  outputfile << "金額 " << quacount*145 << endl;
+// void daycount(string outfile, int vaccine, string rn){
+//   ifstream inputfile1(rn + "Quarantined4.txt");
+//   ofstream outputfile(outfile);
+//   string line;
+//   int quacount = 0;
+//   while(getline(inputfile1, line)){
+//     vector<string> s2;
+//     s2 = tovector(line);
+//     if(s2[4]=="2" || s2[4]=="3"){
+//       quacount += stoi(s2[3]);
+//     }
+//   }
+//   outputfile << "休んだ日数の総計 " << quacount << endl;
+//   outputfile << "金額 " << quacount*145 << endl;
 
-  inputfile1.close();
+//   inputfile1.close();
 
-  ////////////////////
+//   ////////////////////
 
-  ifstream inputfile2("RecoveredFromHospital.txt");
-  int hoscount = 0;
-  int hoscost[2][5] = {{10880, 15014, 17012, 20304, 11451}, {81596, 41918, 45722, 43309, 16750}};
-  while(getline(inputfile2, line)){
-    vector<string> s2;
-    s2 = tovector(line);
-    hoscount += hoscost[stoi(s2[4])][stoi(s2[3])];
-  }
-  outputfile << "入院費 " << hoscount << endl;
-  inputfile2.close();
+//   ifstream inputfile2(rn + "RecoveredFromHospital.txt");
+//   int hoscount = 0;
+//   int hoscost[2][5] = {{10880, 15014, 17012, 20304, 11451}, {81596, 41918, 45722, 43309, 16750}};
+//   while(getline(inputfile2, line)){
+//     vector<string> s2;
+//     s2 = tovector(line);
+//     hoscount += hoscost[stoi(s2[4])][stoi(s2[3])];
+//   }
+//   outputfile << "入院費 " << hoscount << endl;
+//   inputfile2.close();
   
-  //////////////////////////
+//   //////////////////////////
 
-  ifstream inputfile3("Recovered.txt");
-  int outpatientcount = 0;
-  int outpatientcost[2][5] = {{167, 95, 115, 130, 242}, {574, 649, 700, 730, 476}};
-  while(getline(inputfile3, line)){
-    vector<string> s2;
-    s2 = tovector(line);
-    if(s2[1] == "0"){
-      outpatientcount += 3;
-    }else{
-      outpatientcount += outpatientcost[stoi(s2[5])][stoi(s2[4])];
-    }
-  }
-  outputfile << "外来費 " << outpatientcount << endl;
-  inputfile3.close();
+//   ifstream inputfile3(rn + "Recovered.txt");
+//   int outpatientcount = 0;
+//   int outpatientcost[2][5] = {{167, 95, 115, 130, 242}, {574, 649, 700, 730, 476}};
+//   while(getline(inputfile3, line)){
+//     vector<string> s2;
+//     s2 = tovector(line);
+//     if(s2[1] == "0"){
+//       outpatientcount += 3;
+//     }else{
+//       outpatientcount += outpatientcost[stoi(s2[5])][stoi(s2[4])];
+//     }
+//   }
+//   outputfile << "外来費 " << outpatientcount << endl;
+//   inputfile3.close();
 
-  /////////////////////////
+//   /////////////////////////
 
-  ifstream inputfile4("Dead.txt");
-  int deadcount = 0;
-  int deadcost[5] = {1520471, 3077881, 6882779, 3698753, 1381123};
-  while(getline(inputfile4, line)){
-    vector<string> s2;
-    s2 = tovector(line);
-    deadcount += deadcost[stoi(s2[3])];
-  }
-  outputfile << "VSL " << deadcount << endl;
-  inputfile4.close();
+//   ifstream inputfile4(rn + "Dead.txt");
+//   int deadcount = 0;
+//   int deadcost[5] = {1520471, 3077881, 6882779, 3698753, 1381123};
+//   while(getline(inputfile4, line)){
+//     vector<string> s2;
+//     s2 = tovector(line);
+//     deadcount += deadcost[stoi(s2[3])];
+//   }
+//   outputfile << "VSL " << deadcount << endl;
+//   inputfile4.close();
 
-  /////////////////////////
+//   /////////////////////////
 
-  outputfile << "number of Vaccines " << vaccine << endl;
-  outputfile << "Vaccines cost " << vaccine*30 << endl;
-  outputfile << endl;
+//   outputfile << "number of Vaccines " << vaccine << endl;
+//   outputfile << "Vaccines cost " << vaccine*30 << endl;
+//   outputfile << endl;
 
-  outputfile << "総計 " << quacount*145 + hoscount + outpatientcount + deadcount + vaccine*30 << endl;
+//   outputfile << "総計 " << quacount*145 + hoscount + outpatientcount + deadcount + vaccine*30 << endl;
 
-  outputfile.close();
-}
+//   ifstream inputfile("config-twodose");
+//   vector<string> s1;
+//   while(getline(inputfile, line)){
+//     s1 = tovector(line);
+//     if(s1[0]=="seed"){
+//       outputfile << "seed " << s1[1] << endl;
+//     }
+//     if(s1[0]=="R0"){
+//       outputfile << "R0 " << s1[1] << endl;
+//     }
+//     if(s1[0]=="schoolclosuredays"){
+//       outputfile << "schoolclosuredays " << s1[1] << endl;
+//     }
+//     if(s1[0]=="isolation"){
+//       outputfile << "isolation " << s1[1] << endl;
+//     }
+//     if(s1[0]=="quarantine"){
+//       outputfile << "quarantine " << s1[1] << endl;
+//     }
+//     if(s1[0]=="quarantinedays"){
+//       outputfile << "quarantinedays " << s1[1] << endl;
+//     }
+//     if(s1[0]=="schoolclosurestudents"){
+//       outputfile << "schoolclosurestudents " << s1[1] << endl;
+//     }
+//   }
+
+
+//   outputfile.close();
+// }
 
 /* 
  * run - runs the simulation for the desired number of days
  *   nTimer: initialized to 0 in the constructor
  *   nRunLength: total number of days requested
  */
-void EpiModel::run(void) {
+int EpiModel::run(void) {
   prerun();
 #ifdef PARALLEL
   sync();
@@ -4076,12 +4139,20 @@ void EpiModel::run(void) {
     (*logfile).close();
   int vaccine_number = summary();
   outputIndividuals();
-  qua("Quarantined.txt", "Quarantined2.txt");
-  cout<<"qua ok"<<endl;
-  withdraw("Quarantined2.txt", "Recovered.txt", "RecoveredFromHospital.txt", "Dead.txt", "Quarantined3.txt");
-  cout<<"with ok"<<endl;
-  qua("Quarantined3.txt", "Quarantined4.txt");
-  cout<<"qua ok"<<endl;
-  daycount("AllResult.text", vaccine_number);
-  //configRename();
+  return vaccine_number;
+  // ifstream runnumber("run-number");
+  // string line;
+  // vector<string> s2;
+  // while(getline(runnumber, line)){
+  //   s2 = tovector(line);
+  // }
+  // runnumber.close();
+  // string rn = to_string(stoi(s2[0])-1);
+  // qua(rn + "Quarantined.txt", rn + "Quarantined2.txt");
+  // cout<<"qua ok"<<endl;
+  // withdraw(rn + "Quarantined2.txt", rn + "Recovered.txt", rn + "RecoveredFromHospital.txt", rn + "Dead.txt", rn + "Quarantined3.txt");
+  // cout<<"with ok"<<endl;
+  // qua(rn + "Quarantined3.txt", rn + "Quarantined4.txt");
+  // cout<<"qua ok"<<endl;
+  // daycount(rn + "AllResult.text", vaccine_number, rn);
 }

@@ -413,7 +413,7 @@ class EpiModel {
 #endif
   }
   virtual void prerun(void);
-  virtual void run(void);
+  virtual int run(void);
 
  protected:
   virtual void seedinfected(void);
