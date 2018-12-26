@@ -1,7 +1,7 @@
 label example-twodose
 datafile seattle
-logfile 1
-individualfile 1
+logfile 0
+individualfile 0
 reactivestrategy mass
 preexistingimmunitylevel 0
 preexistingimmunitybyage 0 0 0 0 0
@@ -16,7 +16,7 @@ highriskfraction 0.064 0.064 0.144 0.144 0.40
 liberalleave 0
 responsedelay -1
 schoolclosurepolicy bytractandage
-seed 10
+seed 6
 R0 1.5
 schoolclosuredays 3
 isolation 0.8

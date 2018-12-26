@@ -147,7 +147,7 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
         l++;
       }
       if(stoi(s1[2+5*j])>stoi(s2[3+6*i])-stoi(s2[2+6*i])+1 && l==0){
-        insert2=j-1;
+        insert2=j;
         l++;
       }
       if(stoi(s2[0+6*i]) == stoi(s1[0+5*j])){
@@ -228,7 +228,7 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
         l++;
       }
       if(stoi(s1[2+5*j])>stoi(s4[2+6*i]) && l==0){
-        insert2=j-1;
+        insert2=j;
         l++;
       }
       if(stoi(s4[0+6*i]) == stoi(s1[0+5*j])){
@@ -490,31 +490,40 @@ int main() {
   string quarantinedays[2]={"3","5"};
   string schoolclosurestudents[2]={"10","15"};
   string seed[10]={"1","2","3","4","5","6","7","8","9","10"};
-  cout<<r0[1]<<endl;
-
-  for (int i = 0; i < 10; ++i){
-    configRename(r0[0],schoolclosuredays[0],isolation[0],quarantine[0],quarantinedays[0],schoolclosurestudents[0],seed[i]);
-    EpiModelParameters parms(configname);
-    EpiModel model(parms);
-    model.run();
+  for (int a = 0; a < 2; ++a){
+    for (int b = 0; b < 2; ++b){
+      for (int c = 0; c < 2; ++c){
+        for (int d = 0; d < 2; ++d){
+          for (int e = 0; e < 2; ++e){
+            for (int f = 0; f < 2; ++f){
+              for (int i = 0; i < 10; ++i){
+                configRename(r0[a],schoolclosuredays[b],isolation[c],quarantine[d],quarantinedays[e],schoolclosurestudents[f],seed[i]);
+                EpiModelParameters parms(configname);
+                EpiModel model(parms);
+                model.run();
+                int vaccine_number = model.run();
+                ifstream runnumber("run-number");
+                string line;
+                vector<string> s2;
+                while(getline(runnumber, line)){
+                  s2 = tovector(line);
+                }
+                runnumber.close();
+                string rn = to_string(stoi(s2[0])-1);
+                qua(rn + "Quarantined.txt", rn + "Quarantined2.txt");
+                cout<<"qua ok"<<endl;
+                withdraw(rn + "Quarantined2.txt", rn + "Recovered.txt", rn + "RecoveredFromHospital.txt", rn + "Dead.txt", rn + "Quarantined3.txt");
+                cout<<"with ok"<<endl;
+                qua(rn + "Quarantined3.txt", rn + "Quarantined4.txt");
+                cout<<"qua ok"<<endl;
+                daycount(rn + "AllResult.text", vaccine_number, rn);
+              }
+            }
+          }
+        }
+      }
+    }
   }
-  
-  // int vaccine_number = model.run();
-  // ifstream runnumber("run-number");
-  // string line;
-  // vector<string> s2;
-  // while(getline(runnumber, line)){
-  //   s2 = tovector(line);
-  // }
-  // runnumber.close();
-  // string rn = to_string(stoi(s2[0])-1);
-  // qua(rn + "Quarantined.txt", rn + "Quarantined2.txt");
-  // cout<<"qua ok"<<endl;
-  // withdraw(rn + "Quarantined2.txt", rn + "Recovered.txt", rn + "RecoveredFromHospital.txt", rn + "Dead.txt", rn + "Quarantined3.txt");
-  // cout<<"with ok"<<endl;
-  // qua(rn + "Quarantined3.txt", rn + "Quarantined4.txt");
-  // cout<<"qua ok"<<endl;
-  // daycount(rn + "AllResult.text", vaccine_number, rn);
   return 0;
 }
 
