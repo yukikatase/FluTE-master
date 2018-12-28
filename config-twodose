@@ -6,9 +6,11 @@ reactivestrategy mass
 preexistingimmunitylevel 0
 preexistingimmunitybyage 0 0 0 0 0
 prestrategy prevaccinate
+ascertainmentfraction 0.95
+antiviralpolicy treatmentonly
 reactivestrategy mass
 vaccinationfraction 0.5
-seedinfected 10
+seedinfected 20
 seedinfecteddaily 0
 responsethreshhold 0.001
 vaccinedata 0 0.4 0.4 0.67 0 0 0 0 0 0 0
@@ -16,10 +18,10 @@ highriskfraction 0.064 0.064 0.144 0.144 0.40
 liberalleave 0
 responsedelay -1
 schoolclosurepolicy bytractandage
-seed 6
-R0 1.5
-schoolclosuredays 3
-isolation 0.8
-quarantine 0.3
-quarantinedays 3
-schoolclosurestudents 10
+seed 10
+R0 1.7
+schoolclosuredays 5
+isolation 0.95
+quarantine 0.5
+quarantinedays 5
+schoolclosurestudents 15

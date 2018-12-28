@@ -63,6 +63,8 @@ vector<vector<string> > queue(int i, vector<string> s2, vector<string> s3){
       s2.erase(s2.begin() + j*5);
       a = queue(i, s2, s3);
       break;
+    }else if(stoi(s2[2+i*5])+stoi(s2[3+i*5]) > stoi(s2[2+j*5]) + 1){
+      break;
     }
   }
   if(a.empty()){
@@ -192,6 +194,13 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
         }else if(quastart<=withstart && withlast<=qualast){
           break;
         }
+      }else if(stoi(s2[3+6*i])<stoi(s1[2+5*j])+1){
+        s1.insert(s1.begin()+insert2*5, s2[4+6*i]);
+        s1.insert(s1.begin()+insert2*5, to_string(stoi(s2[2+6*i])-1));
+        s1.insert(s1.begin()+insert2*5, to_string(stoi(s2[3+6*i])-stoi(s2[2+6*i])+1));
+        s1.insert(s1.begin()+insert2*5, s2[1+6*i]);
+        s1.insert(s1.begin()+insert2*5, s2[0+6*i]);
+        break;
       }else if(j==s1.size()/5-1){
         s1.insert(s1.begin()+insert2*5, s2[4+6*i]);
         s1.insert(s1.begin()+insert2*5, to_string(stoi(s2[2+6*i])-1));
@@ -269,6 +278,13 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
           s1.erase(s1.begin()+5*(j+1));
           break;
         }
+      }else if(stoi(s4[2+6*i])+stoi(s4[5+6*i])<stoi(s1[2+5*j])+1){
+        s1.insert(s1.begin()+insert2*5, s4[3+6*i]);
+        s1.insert(s1.begin()+insert2*5, s4[5+6*i]);
+        s1.insert(s1.begin()+insert2*5, s4[2+6*i]);
+        s1.insert(s1.begin()+insert2*5, "0");
+        s1.insert(s1.begin()+insert2*5, s4[0+6*i]);
+        break;
       }else if(j==s1.size()/5-1){
         s1.insert(s1.begin()+insert2*5, s4[3+6*i]);
         s1.insert(s1.begin()+insert2*5, s4[5+6*i]);
@@ -293,6 +309,7 @@ void withdraw(string infile1, string infile2, string infile3, string infile4, st
     s3.shrink_to_fit();
   }
   inputfile4.close();
+  cout<<"with before Dead"<<endl;
 
   for (int i = 0; i < s5.size()/5; ++i){// Dead
     if(stoi(s5[1+5*i]) == 1){
@@ -438,6 +455,9 @@ void configRename(string R0, string schoolclosuredays, string isolation, string 
     if(s2[0]=="quarantine"){
       s2[1]=quarantine;
     }
+    if(s2[0]=="quarantinedays"){
+      s2[1]=quarantinedays;
+    }
     if(s2[0]=="schoolclosurestudents"){
       s2[1]=schoolclosurestudents;
     }
@@ -483,14 +503,14 @@ int main() {
     exit(-1);
   }
 
-  string r0[2]={"1.5","2.0"};
+  string r0[2]={"1.5","1.7"};
   string schoolclosuredays[2]={"3","5"};
   string isolation[2]={"0.8","0.95"};
   string quarantine[2]={"0.3","0.5"};
   string quarantinedays[2]={"3","5"};
   string schoolclosurestudents[2]={"10","15"};
   string seed[10]={"1","2","3","4","5","6","7","8","9","10"};
-  for (int a = 0; a < 2; ++a){
+  for (int a = 0; a <2; ++a){
     for (int b = 0; b < 2; ++b){
       for (int c = 0; c < 2; ++c){
         for (int d = 0; d < 2; ++d){

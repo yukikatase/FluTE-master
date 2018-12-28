@@ -1,0 +1,16 @@
+休んだ日数の総計 1633
+金額 236785
+入院費 209964
+外来費 155983
+VSL 5524492
+number of Vaccines 563866
+Vaccines cost 16915980
+
+総計 23043204
+seed 3
+R0 1.7
+schoolclosuredays 3
+isolation 0.8
+quarantine 0.3
+quarantinedays 3
+schoolclosurestudents 10
